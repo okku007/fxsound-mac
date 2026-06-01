@@ -64,7 +64,16 @@ void LegacyDspAdapter::process(juce::AudioBuffer<float>& buffer)
     }
 
     if (numFrames > allocatedFrames)
+    {
+        // This path should not be reached on the audio thread — JUCE stops the
+        // audio device before calling prepare() with a new block size, so
+        // allocatedFrames is always >= numFrames during normal operation.
+        // The grow-on-demand call here is a safety net for unexpected oversized
+        // blocks; it is not safe to call concurrently with a device-change callback.
+        jassert(false && "process() called with numFrames > allocatedFrames — "
+                         "ensure prepare() is called before the audio thread starts.");
         prepare(currentSampleRate, numFrames);
+    }
 
     const int chCount = juce::jmin(buffer.getNumChannels(), 2);
     const float* left  = buffer.getReadPointer(0);
