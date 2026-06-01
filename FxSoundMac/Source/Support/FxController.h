@@ -1,5 +1,6 @@
 #pragma once
 #include <juce_audio_basics/juce_audio_basics.h>
+#include <atomic>
 #include "LegacyDspAdapter.h"
 
 // Single owner of DSP-facing state.
@@ -32,5 +33,6 @@ public:
 
 private:
     LegacyDspAdapter adapter;
-    bool prepared = false;
+    // Atomic so the audio thread sees the write from prepare() without a data race.
+    std::atomic<bool> prepared { false };
 };
