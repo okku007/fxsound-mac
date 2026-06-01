@@ -46,6 +46,7 @@ juce_add_gui_app(FxSoundMac
 target_sources(FxSoundMac PRIVATE
     Source/App/FxSoundMacApp.cpp
     Source/App/MainWindow.cpp
+    Source/DSP/LegacyDspAdapter.cpp
 )
 
 target_compile_definitions(FxSoundMac PRIVATE
@@ -58,9 +59,15 @@ target_compile_definitions(FxSoundMac PRIVATE
 target_link_libraries(FxSoundMac PRIVATE
     juce::juce_audio_utils
     juce::juce_audio_devices
+    juce::juce_audio_basics
     juce::juce_gui_extra
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
+    DfxDspMac
+)
+
+target_include_directories(FxSoundMac PRIVATE
+    Source/DSP
 )
 
 # Ad-hoc codesign for local development/testing.
@@ -76,10 +83,13 @@ target_sources(FxSoundMacTests PRIVATE
     Tests/TestMain.cpp
     Tests/SmokeTest.cpp
     Tests/DspProbeTest.cpp
+    Tests/LegacyDspAdapterTest.cpp
+    Source/DSP/LegacyDspAdapter.cpp
 )
 
 target_link_libraries(FxSoundMacTests PRIVATE
     juce::juce_core
+    juce::juce_audio_basics
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
     DfxDspMac
@@ -87,6 +97,7 @@ target_link_libraries(FxSoundMacTests PRIVATE
 
 target_include_directories(FxSoundMacTests PRIVATE
     ${REPO_ROOT}/dsp/include
+    Source/DSP
 )
 
 add_test(NAME FxSoundMacTests COMMAND FxSoundMacTests)

@@ -52,6 +52,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 DfxDspPrivate::DfxDspPrivate()
 {
+	preset_list_handle_ = NULL;
 	midi_to_rval_qnt_handle_ = NULL;
 	rval_to_midi_qnt_handle_ = NULL;
 
@@ -139,9 +140,11 @@ DfxDspPrivate::~DfxDspPrivate()
 		}
 	}
 
-	// Free dfxp handle
-	dfxpFreeAll();
-	free(dfxp_handle_);
+	// Free dfxp handle using the proper cleanup function
+	if (dfxp_handle_ != NULL)
+	{
+		dfxpQuit((PT_HANDLE **)&dfxp_handle_);
+	}
 	//*dfxp_handle_ = NULL;
 
 	// Free the slout handle
