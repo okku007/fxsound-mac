@@ -63,3 +63,19 @@ set_target_properties(FxSoundMac PROPERTIES
     XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED YES
     XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO
 )
+
+juce_add_console_app(FxSoundMacTests PRODUCT_NAME "FxSoundMacTests")
+
+target_sources(FxSoundMacTests PRIVATE
+    Tests/TestMain.cpp
+    Tests/SmokeTest.cpp
+)
+
+target_link_libraries(FxSoundMacTests PRIVATE
+    juce::juce_core
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_warning_flags
+)
+
+enable_testing()
+add_test(NAME FxSoundMacTests COMMAND FxSoundMacTests)
