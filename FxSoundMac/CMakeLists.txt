@@ -119,6 +119,11 @@ target_include_directories(FxSoundMacTests PRIVATE
 
 add_test(NAME FxSoundMacTests COMMAND FxSoundMacTests)
 
+# Verify NSMicrophoneUsageDescription is present in the built app bundle.
+add_test(NAME InfoPlistMicCheck
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/Tests/check_info_plist.sh
+            $<TARGET_BUNDLE_DIR:FxSoundMac>)
+
 # Bundle curated presets into the app at Contents/Resources/Presets/
 set(FXMAC_PRESET_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Resources/Presets)
 
