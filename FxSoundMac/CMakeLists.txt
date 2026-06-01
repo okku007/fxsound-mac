@@ -9,6 +9,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "Minimum macOS version")
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Universal binary archs")
 
+set(REPO_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/..)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/DfxDspLib.cmake)
+
 include(FetchContent)
 FetchContent_Declare(
     juce
@@ -72,12 +75,18 @@ juce_add_console_app(FxSoundMacTests PRODUCT_NAME "FxSoundMacTests")
 target_sources(FxSoundMacTests PRIVATE
     Tests/TestMain.cpp
     Tests/SmokeTest.cpp
+    Tests/DspProbeTest.cpp
 )
 
 target_link_libraries(FxSoundMacTests PRIVATE
     juce::juce_core
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
+    DfxDspMac
+)
+
+target_include_directories(FxSoundMacTests PRIVATE
+    ${REPO_ROOT}/dsp/include
 )
 
 add_test(NAME FxSoundMacTests COMMAND FxSoundMacTests)
