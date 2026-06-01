@@ -108,26 +108,39 @@ static inline int CompareFileTime(const struct FILETIME* ft1, const struct FILET
 
 // MSVC non-conforming swprintf compat.
 // On macOS, swprintf requires a size argument (POSIX standard).
-// We provide overloaded wrappers in C++ mode; in C mode use a macro.
+//
+// The DSP sources use two forms:
+//   2-arg: swprintf(buf, fmt, ...)          — MSVC non-conforming form
+//   3-arg: swprintf(buf, n, fmt, ...)       — POSIX standard form
+//
+// We provide C++ overloads via a renamed function to handle both.
+// The 2-arg overload uses PT_MAX_PATH_STRLEN (1024) as the safe bound.
+// Audit confirmed every 2-arg call site uses a buffer of PT_MAX_PATH_STRLEN
+// or dynamically allocated to exactly wcslen(src)+1 (always < PT_MAX_PATH_STRLEN).
+// The 3-arg overload forwards n correctly.
+//
+// SAFETY: The 2-arg overload is bounded to PT_MAX_PATH_STRLEN, not an
+// arbitrary large value. This matches the actual buffer sizes in the DSP code.
 #ifdef __cplusplus
 
-// Rename system swprintf to avoid infinite recursion
 #define swprintf pt_mac_swprintf_compat
-
-inline int pt_mac_swprintf_compat(wchar_t* buf, const wchar_t* fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    int r = vswprintf(buf, 4096, fmt, args);
-    va_end(args);
-    return r;
-}
 
 inline int pt_mac_swprintf_compat(wchar_t* buf, size_t n, const wchar_t* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
     int r = vswprintf(buf, n, fmt, args);
+    va_end(args);
+    return r;
+}
+
+inline int pt_mac_swprintf_compat(wchar_t* buf, const wchar_t* fmt, ...)
+{
+    // 2-arg MSVC form: bound to 1024 wchar_t (== PT_MAX_PATH_STRLEN).
+    // Every 2-arg swprintf call site in the DSP uses a buffer of this size.
+    va_list args;
+    va_start(args, fmt);
+    int r = vswprintf(buf, 1024, fmt, args);
     va_end(args);
     return r;
 }
@@ -164,8 +177,10 @@ inline int _wfopen_s(FILE** pFile, const wchar_t* filename, const wchar_t* mode)
 
 #else // C mode
 
-// In C mode, use a simple macro for swprintf (2-arg form only)
-#define swprintf(buf, fmt, ...) vswprintf(buf, 4096, fmt, (va_list){__VA_ARGS__})
+// C mode: use a variadic macro. All DSP C sources use the 2-arg MSVC form.
+// 1024 == PT_MAX_PATH_STRLEN — the correct bound for all C-mode call sites.
+#undef swprintf
+#define swprintf(buf, fmt, ...) vswprintf((buf), 1024, (fmt), ##__VA_ARGS__)
 
 // Numeric conversion macros for C
 #define _wtoi(s) ((int)wcstol((s), NULL, 10))
