@@ -122,7 +122,7 @@ int CSlout::Display_Wide(int i_linenum, wchar_t *wcp_msg)
    return(OKAY);      
 }
 
-#if defined( WIN32 ) // Wide char functions only supported in WIN32 builds.
+#if defined( WIN32 ) || defined( __APPLE__ ) // Wide char functions supported on Win32 and macOS.
 
 /*
  * FUNCTION: Error_Wide()
@@ -132,12 +132,12 @@ int CSlout::Error_Wide(int i_linetype, wchar_t *wcp_msg)
 {
    if (i_linetype == FIRST_LINE)
    {
-      swprintf(m_wcp_msg, L"Error: %s", wcp_msg);
+      swprintf(m_wcp_msg, SLOUT_MAX_MSG_STRLEN, L"Error: %s", wcp_msg);
       m_linenum = 1;
    }
    else
    {
-      swprintf(m_wcp_msg, L"   %s", wcp_msg);
+      swprintf(m_wcp_msg, SLOUT_MAX_MSG_STRLEN, L"   %s", wcp_msg);
       m_linenum++;
    }
    
@@ -154,12 +154,12 @@ int CSlout::Warning_Wide(int i_linetype, wchar_t *wcp_msg)
 {
    if (i_linetype == FIRST_LINE)
    {
-      swprintf(m_wcp_msg, L"Warning: %s", wcp_msg);
+      swprintf(m_wcp_msg, SLOUT_MAX_MSG_STRLEN, L"Warning: %s", wcp_msg);
       m_linenum = 1;
    }
    else
    {
-      swprintf(m_wcp_msg, L"   %s", wcp_msg);
+      swprintf(m_wcp_msg, SLOUT_MAX_MSG_STRLEN, L"   %s", wcp_msg);
       m_linenum++;
    }
    
@@ -179,7 +179,7 @@ int CSlout::Message_Wide(int i_linetype, wchar_t *wcp_msg)
    else 
       m_linenum++;
    
-   swprintf(m_wcp_msg, L"%s", wcp_msg);
+   swprintf(m_wcp_msg, SLOUT_MAX_MSG_STRLEN, L"%s", wcp_msg);
    Display_Wide(m_linenum, m_wcp_msg);
      
    return(OKAY);      

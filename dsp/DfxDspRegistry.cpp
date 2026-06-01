@@ -16,7 +16,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "u_DfxDsp.h"
+#if !defined(__APPLE__)
 #include "reg.h"
+#endif
 
 #define PT_MAX_PATH_STRLEN             1024
 #define DFXG_REGISTRY_BUFFER_LENGTH             PT_MAX_PATH_STRLEN
@@ -29,6 +31,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 int DfxDspPrivate::writeRegistrySessionLongValue(long l_value, wchar_t *wcp_key_name)
 {
+#if defined(__APPLE__)
+	(void)l_value; (void)wcp_key_name;
+	return(OKAY);
+#else
 	wchar_t wcp_key_value[DFXG_REGISTRY_BUFFER_LENGTH];
 	wchar_t wcp_full_key_path[PT_MAX_PATH_STRLEN];
 
@@ -49,4 +55,5 @@ int DfxDspPrivate::writeRegistrySessionLongValue(long l_value, wchar_t *wcp_key_
 	}
 
 	return(OKAY);
+#endif
 }

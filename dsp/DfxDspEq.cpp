@@ -25,7 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "DfxSdk.h"
 #include "vals.h"
 #include "GraphicEq.h"
+#if !defined(__APPLE__)
 #include "reg.h"
+#endif
 #include "mth.h"
 #include "ptutil/dfxp/u_dfxp.h"
 
@@ -263,6 +265,16 @@ int DfxDspPrivate::getGraphicEqInfoFromVals(PT_HANDLE *hp_vals)
 */
 int DfxDspPrivate::eqSetProcessingOn(int i_storage_type, int i_on)
 {
+#if defined(__APPLE__)
+	/* Store setting in memory (if requested) */
+	if ((i_storage_type == DFXP_STORAGE_TYPE_MEMORY) ||
+		(i_storage_type == DFXP_STORAGE_TYPE_ALL))
+	{
+		eq_processing_on_ = i_on;
+	}
+	/* Registry not available on macOS — silently succeed */
+	return(OKAY);
+#else
 	wchar_t wcp_full_key_path[PT_MAX_PATH_STRLEN];
 	wchar_t wcp_key_value[DFXP_REGISTRY_BUFFER_LENGTH];
 
@@ -294,6 +306,7 @@ int DfxDspPrivate::eqSetProcessingOn(int i_storage_type, int i_on)
 	}
 
 	return(OKAY);
+#endif
 }
 
 /*
@@ -301,6 +314,15 @@ int DfxDspPrivate::eqSetProcessingOn(int i_storage_type, int i_on)
 */
 int DfxDspPrivate::eqGetProcessingOn(int i_storage_type, int *ip_on)
 {
+#if defined(__APPLE__)
+	*ip_on = IS_TRUE;
+	if (i_storage_type == DFXP_STORAGE_TYPE_MEMORY)
+	{
+		*ip_on = eq_processing_on_;
+	}
+	/* Registry not available on macOS — return default */
+	return(OKAY);
+#else
 	wchar_t wcp_full_key_path[PT_MAX_PATH_STRLEN];
 	wchar_t wcp_key_value[DFXP_REGISTRY_BUFFER_LENGTH];
 	int key_exists;
@@ -342,6 +364,7 @@ int DfxDspPrivate::eqGetProcessingOn(int i_storage_type, int *ip_on)
 		*ip_on = _wtoi(wcp_key_value);
 
 	return(OKAY);
+#endif
 }
 
 void DfxDspPrivate::eqOn(bool on)

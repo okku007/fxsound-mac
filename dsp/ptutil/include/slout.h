@@ -50,11 +50,11 @@ public:
 
    virtual int Display_Wide(int, wchar_t *);
 
-#if defined( WIN32 ) // Wide char functions only supported in WIN32 builds.
+#if defined( WIN32 ) || defined( __APPLE__ ) // Wide char functions supported on Win32 and macOS.
    virtual int Message_Wide(int, wchar_t *);
    virtual int Error_Wide(int, wchar_t *);
    virtual int Warning_Wide(int, wchar_t *);
-#endif //WIN32
+#endif //WIN32 || __APPLE__
 
 private:
    char m_msg[SLOUT_MAX_MSG_STRLEN];

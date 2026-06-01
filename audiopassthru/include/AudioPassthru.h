@@ -22,15 +22,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _AUDIOPASSTHRU_H_
 #define _AUDIOPASSTHRU_H_ 
 
+#if defined(__APPLE__)
+#include "pt_mac_compat.h"
+#endif
+
 #ifndef __ANDROID__
+#ifndef __APPLE__
 #include <Windows.h>
+#endif // __APPLE__
 #endif //WIN32
+#ifndef __APPLE__
 #include <Mmdeviceapi.h>
+#endif // __APPLE__
 #include <vector> 
 #include "DfxDsp.h"
 
 struct SoundDevice {
+#if !defined(__APPLE__)
 	IMMDevice *pAllDevices = NULL; // Object pointers for each device.
+#endif
 	bool isCaptureDevice = false;
 	bool isPlaybackDevice = false;
 	bool isTargetedRealPlaybackDevice = false;

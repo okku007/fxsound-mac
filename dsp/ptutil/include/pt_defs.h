@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _PT_DEFS_H_
 #define _PT_DEFS_H_
 
-#ifndef __ANDROID__
+#if !defined(__ANDROID__) && !defined(__APPLE__)
 #include <windows.h>
 #endif //WIN32
 

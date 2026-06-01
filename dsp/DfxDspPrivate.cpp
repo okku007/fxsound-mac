@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 #include "BinauralSyn.h"
-#include "ptutil\dfxp\u_dfxp.h"
+#include "ptutil/dfxp/u_dfxp.h"
 #include "com.h"
 #include "dfxSharedUtil.h"
 #include "GraphicEq.h"
@@ -216,7 +216,8 @@ bool DfxDspPrivate::isPowerOn()
 	int value;
 	
 	dfxpGetButtonValue(dfxp_handle_, DFX_UI_BUTTON_BYPASS, &value);
-	if (value != 0)
+	// bypass == 0 means bypass is OFF, i.e., power is ON
+	if (value == 0)
 	{
 		return true;
 	}

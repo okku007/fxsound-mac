@@ -15,7 +15,10 @@
 #define _FILE_H_
 
 #include <stdio.h>
+#include <stdint.h>
+#if !defined(__ANDROID__) && !defined(__APPLE__)
 #include <windows.h>
+#endif
 
 #include "slout.h" 
 
@@ -34,7 +37,11 @@ int PT_DECLSPEC fileDoesPathExist_Wide(wchar_t *wcp_file_path, int *ip_exist);
 int PT_DECLSPEC fileRemove(char *, CSlout *);
 int PT_DECLSPEC fileRemove_Wide(wchar_t *, CSlout *);
 int PT_DECLSPEC fileRemoveWithStatus_Wide(wchar_t *, int *, CSlout *);
+#if !defined(__APPLE__)
 int PT_DECLSPEC fileSize_Wide(wchar_t *, unsigned __int64 *, CSlout *);
+#else
+int PT_DECLSPEC fileSize_Wide(wchar_t *, uint64_t *, CSlout *);
+#endif
 int PT_DECLSPEC fileToString(char *, char *, int, CSlout *); 
 int PT_DECLSPEC fileToString_Wide(wchar_t *, char *, int , CSlout *);
 int PT_DECLSPEC fileToString_WithAllocation_Wide(wchar_t *, wchar_t **, int *, CSlout *);
@@ -86,12 +93,14 @@ int PT_DECLSPEC fileCalcDspPath(char *, char *, char *, char *, char *, int,
 /* FileDate.cpp */
 int PT_DECLSPEC fileSetBackCreateTime(char *, long, CSlout *);
 int PT_DECLSPEC fileSetBackCreateTime_Wide(wchar_t *, long, CSlout *);
+#if !defined(__APPLE__)
 int PT_DECLSPEC fileGetModifiedDate(char *, FILETIME *, CSlout *);
 int PT_DECLSPEC fileGetModifiedDate_Wide(wchar_t *, FILETIME *, CSlout *);
 int PT_DECLSPEC fileGetCreationDate(char *, FILETIME *, CSlout *);
 int PT_DECLSPEC fileGetCreationDate_Wide(wchar_t *, FILETIME *, CSlout *);
 int PT_DECLSPEC fileSetModifiedDate(char *, FILETIME *, CSlout *hp_slout);
 int PT_DECLSPEC fileSetModifiedDate_Wide(wchar_t *, FILETIME *, CSlout *hp_slout);
+#endif // !__APPLE__
 int PT_DECLSPEC fileCompareDates(char *, char *, int *, CSlout *);
 int PT_DECLSPEC fileCompareDates_Wide(wchar_t *, wchar_t *, int *, CSlout *);
 int PT_DECLSPEC fileTouch(char *, CSlout *);
@@ -117,12 +126,14 @@ int fileCreateListOfSubfolders_Wide(wchar_t *, wchar_t ***, int *, int, CSlout *
 int fileCreateListOfSubfiles_Wide(wchar_t *, wchar_t ***, int *, int, CSlout *);
 
 /* FileWin32Handle.cpp */
+#if !defined(__APPLE__)
 HANDLE fileWin32CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode,
 									LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition,
 									DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, CSlout *hp_slout);
 HANDLE fileWin32CreateFile_Wide(LPCWSTR lpwFileName, DWORD dwDesiredAccess, DWORD dwShareMode,
 												  LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition,
 												  DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, CSlout *hp_slout);
+#endif // !__APPLE__
 
 /* fileSmartStringSearch.cpp */
 int PT_DECLSPEC fileSmartStringSearchLineBased(wchar_t *, wchar_t *, wchar_t *, char *, wchar_t *,	bool, bool *, bool *);
