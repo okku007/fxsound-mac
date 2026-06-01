@@ -48,6 +48,7 @@ target_sources(FxSoundMac PRIVATE
     Source/App/MainWindow.cpp
     Source/DSP/LegacyDspAdapter.cpp
     Source/Audio/DeviceValidation.cpp
+    Source/Audio/MacAudioEngine.cpp
     Source/Support/PresetLibrary.cpp
     Source/Support/FxController.cpp
 )
