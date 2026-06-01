@@ -17,6 +17,10 @@ MainComponent::MainComponent()
 {
     controller.prepare(48000, 512);
 
+    // Power on by default — DSP initializes with bypass=1 (power off),
+    // so we must explicitly enable it on startup.
+    controller.setPower(true);
+
     // Power
     addAndMakeVisible(powerButton);
     powerButton.setToggleState(true, juce::dontSendNotification);
