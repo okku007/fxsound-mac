@@ -90,6 +90,17 @@ int COMSFTWR_DECL comSftwrWriteParam(PT_HANDLE *hp_comSftwr, long l_offset, long
 
 #endif
 
+#if defined(__APPLE__)
+	/* Bounds check — dsp_params is DSPFX_MAX_NUM_PROCS * 2 * DSPS_MAX_NUM_PARAMS floats.
+	 * An out-of-bounds write would silently corrupt adjacent heap memory on macOS.
+	 * Return NOT_OKAY rather than crash. */
+	{
+		long max_offset = (long)(DSPFX_MAX_NUM_PROCS) * 2L * (long)(DSPS_MAX_NUM_PARAMS);
+		if (l_offset < 0 || l_offset >= max_offset)
+			return(NOT_OKAY);
+	}
+#endif
+
 	cast_handle->dsp_params[l_offset] = *flt_ptr;
 
 	/* Set the recue pending flag */
