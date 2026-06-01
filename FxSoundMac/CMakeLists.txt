@@ -111,3 +111,15 @@ target_include_directories(FxSoundMacTests PRIVATE
 )
 
 add_test(NAME FxSoundMacTests COMMAND FxSoundMacTests)
+
+# Bundle curated presets into the app at Contents/Resources/Presets/
+set(FXMAC_PRESET_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Resources/Presets)
+
+add_custom_command(TARGET FxSoundMac POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "$<TARGET_BUNDLE_CONTENT_DIR:FxSoundMac>/Resources/Presets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${FXMAC_PRESET_DIR}"
+        "$<TARGET_BUNDLE_CONTENT_DIR:FxSoundMac>/Resources/Presets"
+    COMMENT "Bundling presets into FxSoundMac.app"
+)
