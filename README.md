@@ -49,3 +49,49 @@ Thanks to [Theremino](https://www.theremino.com) for the valuable contributions 
 
 ## License
 [AGPL v3.0](https://github.com/fxsound2/fxsound-app/blob/main/LICENSE)
+
+---
+
+## Building the macOS port (FxSoundMac)
+
+The macOS port lives under `FxSoundMac/` and is a standalone CMake project independent of the Windows Visual Studio solution.
+
+### Prerequisites
+
+- macOS 13 Ventura or newer
+- Xcode (latest stable, with command-line tools)
+- CMake ≥ 3.22 (`brew install cmake`)
+- BlackHole 2ch virtual audio device (`brew install --cask blackhole-2ch`)
+- Internet access for the first build (JUCE 7.0.12 is fetched via CMake FetchContent)
+
+### Build (Debug)
+
+```bash
+cd FxSoundMac
+cmake -B build -G Xcode -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+cmake --build build --config Debug --target FxSoundMac
+open build/FxSoundMac_artefacts/Debug/FxSoundMac.app
+```
+
+### Build (Release)
+
+```bash
+cmake --build build --config Release --target FxSoundMac
+# App is at: build/FxSoundMac_artefacts/Release/FxSoundMac.app
+```
+
+The Release binary is a universal binary (`arm64 + x86_64`) signed ad-hoc for local use.
+
+### Run automated tests
+
+```bash
+cmake --build build --config Debug --target FxSoundMacTests
+./build/FxSoundMacTests_artefacts/Debug/FxSoundMacTests
+
+# Verify NSMicrophoneUsageDescription in the bundle:
+bash Tests/check_info_plist.sh build/FxSoundMac_artefacts/Debug/FxSoundMac.app
+```
+
+### Manual audio validation
+
+See [`FxSoundMac/MANUAL_VALIDATION.md`](FxSoundMac/MANUAL_VALIDATION.md) for the full checklist covering BlackHole setup, DSP controls, device switching, and recovery guidance.
