@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "../UI/MainComponent.h"
 
 MainWindow::MainWindow(const juce::String& name)
     : juce::DocumentWindow(name,
@@ -7,10 +8,8 @@ MainWindow::MainWindow(const juce::String& name)
         juce::DocumentWindow::allButtons)
 {
     setUsingNativeTitleBar(true);
-    auto* placeholder = new juce::Label({}, "FxSoundMac");
-    placeholder->setJustificationType(juce::Justification::centred);
-    placeholder->setSize(480, 320);
-    setContentOwned(placeholder, true);
+    setContentOwned(new MainComponent(), true);
+    setResizable(true, true);
     centreWithSize(getWidth(), getHeight());
     setVisible(true);
 }

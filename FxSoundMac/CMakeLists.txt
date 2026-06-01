@@ -51,6 +51,8 @@ target_sources(FxSoundMac PRIVATE
     Source/Audio/MacAudioEngine.cpp
     Source/Support/PresetLibrary.cpp
     Source/Support/FxController.cpp
+    Source/UI/MainComponent.cpp
+    Source/UI/SetupStatusPanel.cpp
 )
 
 target_compile_definitions(FxSoundMac PRIVATE
@@ -74,6 +76,7 @@ target_include_directories(FxSoundMac PRIVATE
     Source/DSP
     Source/Audio
     Source/Support
+    Source/UI
 )
 
 # Ad-hoc codesign for local development/testing.
