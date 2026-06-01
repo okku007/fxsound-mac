@@ -357,3 +357,9 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+
+# macOS port — planning and agent context docs (not for version control)
+docs/
+AGENTS.MD
+PORTING_NOTES.md
+fxsound-macos-port-guide-v4.md
