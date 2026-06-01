@@ -47,6 +47,7 @@ target_sources(FxSoundMac PRIVATE
     Source/App/FxSoundMacApp.cpp
     Source/App/MainWindow.cpp
     Source/DSP/LegacyDspAdapter.cpp
+    Source/Audio/DeviceValidation.cpp
 )
 
 target_compile_definitions(FxSoundMac PRIVATE
@@ -68,6 +69,7 @@ target_link_libraries(FxSoundMac PRIVATE
 
 target_include_directories(FxSoundMac PRIVATE
     Source/DSP
+    Source/Audio
 )
 
 # Ad-hoc codesign for local development/testing.
@@ -84,7 +86,9 @@ target_sources(FxSoundMacTests PRIVATE
     Tests/SmokeTest.cpp
     Tests/DspProbeTest.cpp
     Tests/LegacyDspAdapterTest.cpp
+    Tests/DeviceValidationTest.cpp
     Source/DSP/LegacyDspAdapter.cpp
+    Source/Audio/DeviceValidation.cpp
 )
 
 target_link_libraries(FxSoundMacTests PRIVATE
@@ -98,6 +102,7 @@ target_link_libraries(FxSoundMacTests PRIVATE
 target_include_directories(FxSoundMacTests PRIVATE
     ${REPO_ROOT}/dsp/include
     Source/DSP
+    Source/Audio
 )
 
 add_test(NAME FxSoundMacTests COMMAND FxSoundMacTests)
