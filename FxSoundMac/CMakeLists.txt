@@ -49,6 +49,7 @@ target_sources(FxSoundMac PRIVATE
     Source/DSP/LegacyDspAdapter.cpp
     Source/Audio/DeviceValidation.cpp
     Source/Support/PresetLibrary.cpp
+    Source/Support/FxController.cpp
 )
 
 target_compile_definitions(FxSoundMac PRIVATE
@@ -90,9 +91,11 @@ target_sources(FxSoundMacTests PRIVATE
     Tests/LegacyDspAdapterTest.cpp
     Tests/DeviceValidationTest.cpp
     Tests/PresetLibraryTest.cpp
+    Tests/FxControllerTest.cpp
     Source/DSP/LegacyDspAdapter.cpp
     Source/Audio/DeviceValidation.cpp
     Source/Support/PresetLibrary.cpp
+    Source/Support/FxController.cpp
 )
 
 target_link_libraries(FxSoundMacTests PRIVATE
