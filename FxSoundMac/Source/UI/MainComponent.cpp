@@ -127,13 +127,24 @@ void MainComponent::buildEqSliders()
         const float freq = controller.getEqBandFrequency(b);
         juce::String label;
         if (freq >= 1000.0f)
-            label = juce::String(freq / 1000.0f, 1) + "k";
+        {
+            const float khz = freq / 1000.0f;
+            if (khz >= 10.0f)
+                // ≥10 kHz: round to nearest integer to keep label ≤3 chars ("13k" not "12.5k")
+                label = juce::String(juce::roundToInt(khz)) + "k";
+            else if (khz == (float)(int)khz)
+                label = juce::String((int)khz) + "k";
+            else
+                label = juce::String(khz, 1) + "k";
+        }
         else
+        {
             label = juce::String((int) freq);
+        }
 
         auto* lbl = new juce::Label({}, label);
         lbl->setJustificationType(juce::Justification::centred);
-        lbl->setFont(juce::Font(11.0f));
+        lbl->setFont(juce::Font(9.0f));
         addAndMakeVisible(lbl);
         eqFreqLabels.add(lbl);
     }
