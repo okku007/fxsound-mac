@@ -108,7 +108,11 @@ int PT_DECLSPEC comLongIntWrite(PT_HANDLE *hp_com, long l_mem_offset, long l_val
 	cast_handle = (struct comHdlType *)hp_com;
 
 	if (cast_handle == NULL)
+#if defined(__APPLE__)
+		return(OKAY);  // On macOS, non-front channels are not initialized — silently succeed.
+#else
 		return(NOT_OKAY);
+#endif
 
 	if (cast_handle->turned_off)
 		return(OKAY);
@@ -154,7 +158,11 @@ int PT_DECLSPEC comRealWrite(PT_HANDLE *hp_com, long l_mem_offset, realtype r_va
 	cast_handle = (struct comHdlType *)hp_com;
 
 	if (cast_handle == NULL)
+#if defined(__APPLE__)
+		return(OKAY);  // On macOS, non-front channels are not initialized — silently succeed.
+#else
 		return(NOT_OKAY);
+#endif
 
 	if (cast_handle->turned_off)
 		return(OKAY);

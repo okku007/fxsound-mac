@@ -34,6 +34,7 @@ private:
     juce::Label  effectLabels[DfxDsp::NumEffects];
 
     juce::OwnedArray<juce::Slider> eqSliders;
+    juce::OwnedArray<juce::Label>  eqFreqLabels;
 
     juce::Slider outputGainSlider;
     juce::Label  outputGainLabel { {}, "Output Gain (dB)" };

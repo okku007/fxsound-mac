@@ -205,6 +205,18 @@ DSP_FUNC_DEF void DSPS_AURAL_PROCESS(long *lp_data, int l_length,
 	read_in_buf = lp_data;
 	read_out_buf = lp_data;
 
+#if defined(__APPLE__)
+	{
+		static int s_aural_buf = 0;
+		if (++s_aural_buf <= 6) {
+			struct dspAuralStructType *s_diag = (struct dspAuralStructType *)(COMM_MEM_OFFSET);
+			fprintf(stderr, "[Aural buf#%d] dry=%.4f wet=%.4f drive=%.4f odd=%.4f even=%.4f\n",
+			        s_aural_buf, s_diag->dry_gain, s_diag->wet_gain,
+			        s_diag->aural_drive, s_diag->aural_odd, s_diag->aural_even);
+		}
+	}
+#endif
+
 	for(i=0; i<l_length; i++)
 	{
 		float out1, out2;

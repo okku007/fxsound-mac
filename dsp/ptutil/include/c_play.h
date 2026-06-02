@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _C_PLAY_H_
 #define _C_PLAY_H_
 
+#include "dsp_long_compat_begin.h"
+
 /* Local Functions */
 void play32_but_bs_350_4000(realtype *xv, realtype *yv, realtype in, realtype *in_bs);
 void play32_but_bs_416_4000(realtype *xv, realtype *yv, realtype in, realtype *in_bs);
@@ -345,5 +347,7 @@ struct dspPlayStructType
 	unsigned long delay_line_index;
 	realtype delay_lines;
 };
+
+#include "dsp_long_compat_end.h"
 
 #endif /* _C_PLAY_H_ */

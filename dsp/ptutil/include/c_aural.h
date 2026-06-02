@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _C_AURAL_H_
 #define _C_AURAL_H_
 
+#include "dsp_long_compat_begin.h"
+
 /* Special structure used for parameters and state of algorithm */
 struct dspAuralStructType
 {
@@ -89,5 +91,7 @@ struct dspAuralStructType
  * above the first effect, the activator. Make sure not to step
  * on those parameters
  */
+
+#include "dsp_long_compat_end.h"
 
 #endif /* _C_AURAL_H_ */

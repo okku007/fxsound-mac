@@ -387,7 +387,10 @@ int PT_DECLSPEC mthConvertRealtypeBufToIntBuf(int i_length, int i_bit_width, int
 	case 16:
 		for(i=0; i<i_length; i++)
 		{
-			sp_buf[i] = (short int)(rp_buf[i] * (float)MTH_16_BIT_REAL_CONVERSION_FACTOR);
+			float s_val = rp_buf[i] * (float)MTH_16_BIT_REAL_CONVERSION_FACTOR;
+			if (s_val > 32767.0f)       s_val = 32767.0f;
+			else if (s_val < -32768.0f) s_val = -32768.0f;
+			sp_buf[i] = (short int)s_val;
 		}
 		break;
 

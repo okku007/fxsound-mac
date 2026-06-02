@@ -41,6 +41,7 @@ float LegacyDspAdapter::getEffectValue(DfxDsp::Effect e) const
 }
 
 int LegacyDspAdapter::getNumEqBands() const { return const_cast<DfxDsp&>(dsp).getNumEqBands(); }
+float LegacyDspAdapter::getEqBandFrequency(int band) const { return const_cast<DfxDsp&>(dsp).getEqBandFrequency(band); }
 void LegacyDspAdapter::setEqBandBoostCut(int band, float db) { dsp.setEqBandBoostCut(band, db); }
 float LegacyDspAdapter::getEqBandBoostCut(int band) const { return const_cast<DfxDsp&>(dsp).getEqBandBoostCut(band); }
 
@@ -79,22 +80,33 @@ void LegacyDspAdapter::process(juce::AudioBuffer<float>& buffer)
     const float* left  = buffer.getReadPointer(0);
     const float* right = chCount > 1 ? buffer.getReadPointer(1) : left;
 
-    // Interleave + float->int16.
+    // The Windows DSP was calibrated for ~-12 dBFS nominal input (line-level capture).
+    // BlackHole delivers system audio at 0 dBFS, which would overdrive the DSP chain.
+    // Attenuate input by -12 dB so the DSP chain operates at its designed level.
+    // The Maximizer (always active) provides ~+6 dB gain internally and limits output
+    // to max_output ≈ 0.966 — it IS the output compensation. Adding a separate +6 dB
+    // post-comp (kDspOutputComp=2.0) was double-dipping: Maximizer ceiling × 2 = 1.932,
+    // which hard-clips in jlimit(-1,1) → audible frying. Set comp to 1.0 (unity).
+    static constexpr float kDspInputScale  = 0.25f;   // -12 dB
+    static constexpr float kDspOutputComp  = 1.0f;    // unity — Maximizer handles gain
+
+    // Interleave + float->int16 with DSP input pre-gain.
     for (int i = 0; i < numFrames; ++i)
     {
-        inInt16[(size_t) i * 2]     = (short) juce::jlimit(-32768, 32767, (int) std::lround(left[i]  * 32767.0f));
-        inInt16[(size_t) i * 2 + 1] = (short) juce::jlimit(-32768, 32767, (int) std::lround(right[i] * 32767.0f));
+        inInt16[(size_t) i * 2]     = (short) juce::jlimit(-32768, 32767, (int) std::lround(left[i]  * 32767.0f * kDspInputScale));
+        inInt16[(size_t) i * 2 + 1] = (short) juce::jlimit(-32768, 32767, (int) std::lround(right[i] * 32767.0f * kDspInputScale));
     }
 
-    dsp.processAudio(inInt16.getData(), outInt16.getData(), numFrames, 0);
+    const int dspResult = dsp.processAudio(inInt16.getData(), outInt16.getData(), numFrames, 0);
+    (void)dspResult;
 
-    // De-interleave + int16->float + output gain.
+    // De-interleave + int16->float + output compensation + hard limit.
     float* outL = buffer.getWritePointer(0);
     float* outR = chCount > 1 ? buffer.getWritePointer(1) : nullptr;
     for (int i = 0; i < numFrames; ++i)
     {
-        const float l = (float) outInt16[(size_t) i * 2]     / 32767.0f * gain;
-        const float r = (float) outInt16[(size_t) i * 2 + 1] / 32767.0f * gain;
+        const float l = juce::jlimit(-1.0f, 1.0f, (float) outInt16[(size_t) i * 2]     / 32767.0f * kDspOutputComp * gain);
+        const float r = juce::jlimit(-1.0f, 1.0f, (float) outInt16[(size_t) i * 2 + 1] / 32767.0f * kDspOutputComp * gain);
         outL[i] = l;
         if (outR != nullptr) outR[i] = r;
     }

@@ -90,6 +90,10 @@ int dfxp_CommunicateInit(PT_HANDLE *hp_dfxp)
 	            obsolete.num_cards_configured, cast_handle->slout1) != OKAY)
       return(NOT_OKAY);
 
+#if !defined(__APPLE__)
+   // On macOS, only com_hdl_front is used for stereo processing.
+   // All 5 comSftwrHdlType instances share the same dsp_params array in-process,
+   // so initializing rear/side/center/subwoofer would overwrite front's parameters.
    if (comInit(&(cast_handle->com_hdl_rear), obsolete.softdsp_mode, obsolete.board_address, 
 		         obsolete.processor_num, obsolete.base_address, obsolete.cp_dsp_dirpath, 
 	            obsolete.num_cards_configured, cast_handle->slout1) != OKAY)
@@ -109,12 +113,19 @@ int dfxp_CommunicateInit(PT_HANDLE *hp_dfxp)
 		         obsolete.processor_num, obsolete.base_address, obsolete.cp_dsp_dirpath, 
 	            obsolete.num_cards_configured, cast_handle->slout1) != OKAY)
       return(NOT_OKAY);
+#endif
 
 	if (dfxp_ComLoadAndRun(hp_dfxp) != OKAY)
+	{
+		fprintf(stderr, "[CommInit] FAIL: dfxp_ComLoadAndRun\n");
 		return(NOT_OKAY);
+	}
 
 	if (dfxpCommunicateAll(hp_dfxp) != OKAY)
+	{
+		fprintf(stderr, "[CommInit] FAIL: dfxpCommunicateAll\n");
 		return(NOT_OKAY);
+	}
 
 	return(OKAY);
 }
@@ -155,6 +166,8 @@ int dfxp_ComLoadAndRun(PT_HANDLE *hp_dfxp)
 										stereo_flag, (short)DFXP_DSP_INTERNAL_BIT_WIDTH) != OKAY)
 			return(NOT_OKAY);
 
+#if !defined(__APPLE__)
+		// On macOS, only com_hdl_front is initialized — skip the other channels.
 		if (comSoftDspLoadAndRunNonShared(cast_handle->com_hdl_rear, DFXP_DSP_FUNCTION_NAME, cast_handle->internal_sampling_freq, 
 										stereo_flag, (short)DFXP_DSP_INTERNAL_BIT_WIDTH) != OKAY)
 			return(NOT_OKAY);
@@ -171,6 +184,7 @@ int dfxp_ComLoadAndRun(PT_HANDLE *hp_dfxp)
 		if (comSoftDspLoadAndRunNonShared(cast_handle->com_hdl_subwoofer, DFXP_DSP_FUNCTION_NAME, cast_handle->internal_sampling_freq, 
 										IS_FALSE, (short)DFXP_DSP_INTERNAL_BIT_WIDTH) != OKAY)
 			return(NOT_OKAY);
+#endif
 	}
 
    return(OKAY);
@@ -185,11 +199,17 @@ int dfxpCommunicateAll(PT_HANDLE *hp_dfxp)
 {
 	/* Communicate all the parameters that can change based on user controls */
 	if (dfxpCommunicateAllNonFixed(hp_dfxp, IS_FALSE) != OKAY)
+	{
+		fprintf(stderr, "[CommAll] FAIL: dfxpCommunicateAllNonFixed\n");
 		return(NOT_OKAY);
+	}
 
 	/* Communicate all the parameters that don't change based on user controls */
 	if (dfxp_CommunicateAllFixed(hp_dfxp) != OKAY)
+	{
+		fprintf(stderr, "[CommAll] FAIL: dfxp_CommunicateAllFixed\n");
 		return(NOT_OKAY);
+	}
 
 	return(OKAY);
 }
@@ -542,10 +562,18 @@ int dfxp_CommunicateFidelity(PT_HANDLE *hp_dfxp)
 	}
 	
 	/* Calculate the value that should be sent to the dsp card */
-	if (qntIToRCalc(cast_handle->midi_to_dsp.fidelity_qnt_hdl, 
-		             pc_fidelity, 
+	if (qntIToRCalc(cast_handle->midi_to_dsp.fidelity_qnt_hdl,
+		             pc_fidelity,
 		             &dsp_fidelity) != OKAY)
 		return(NOT_OKAY);
+
+#if defined(__APPLE__)
+	{
+		static int s_fid = 0;
+		if (++s_fid <= 12)
+			fprintf(stderr, "[Fidelity #%d] midi=%d dsp_drive=%.4f\n", s_fid, pc_fidelity, dsp_fidelity);
+	}
+#endif
 
 	// Note every channel gets normal fidelity except for subwoofer channel, which will always be bypassed
 	if (comRealWrite(cast_handle->com_hdl_front, AURAL_DRIVE + DSP_PLAY_AURAL_PARAM_OFFSET, 

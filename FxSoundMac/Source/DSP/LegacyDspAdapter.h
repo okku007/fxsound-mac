@@ -33,6 +33,7 @@ public:
     float getEffectValue(DfxDsp::Effect effect) const;
 
     int getNumEqBands() const;
+    float getEqBandFrequency(int band) const;
     void setEqBandBoostCut(int band, float db);
     float getEqBandBoostCut(int band) const;
 

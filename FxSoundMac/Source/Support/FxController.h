@@ -22,6 +22,7 @@ public:
     void setEqBand(int band, float db);
     float getEqBand(int band) const;
     int getNumEqBands() const;
+    float getEqBandFrequency(int band) const;
 
     void setOutputGainDb(float db);
     float getOutputGainDb() const;

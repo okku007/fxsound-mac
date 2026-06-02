@@ -126,7 +126,7 @@ int COMSFTWR_DECL comSftwrInitDspAlgorithmCPP(PT_HANDLE *hp_comSftwr, realtype r
 #ifdef WIN32
 	__int64 perf_count;
 #else
-	long long perf_count;
+	int64_t perf_count;
 #endif
 	long sample_count_init;
 	struct comSftwrHdlType *cast_handle;
@@ -155,7 +155,7 @@ int COMSFTWR_DECL comSftwrInitDspAlgorithmCPP(PT_HANDLE *hp_comSftwr, realtype r
 #ifdef WIN32
 	sample_count_init = (long)(perf_count % (__int64)COMSFTWR_DEMO_SAMPLES_ALLOWED);
 #else
-	sample_count_init = (long)(perf_count % (long long)COMSFTWR_DEMO_SAMPLES_ALLOWED);
+	sample_count_init = (long)(perf_count % (int64_t)COMSFTWR_DEMO_SAMPLES_ALLOWED);
 #endif
 	cast_handle->sample_count = sample_count_init;
 
@@ -202,6 +202,15 @@ int COMSFTWR_DECL comSftwrInitDspAlgorithmCPP(PT_HANDLE *hp_comSftwr, realtype r
 #endif
 
 	/* Calls DSP algorithm initialization */
+#if defined(__APPLE__)
+	/* Guard against null function pointer — indicates index mismatch in comSftwrInitFunctions */
+	if (cast_handle->comSftDspInitPtr[index] == NULL)
+	{
+		fprintf(stderr, "[FxSoundMac] comSftwrInitDspAlgorithmCPP: NULL init ptr at index %d (dsp_function_index=%d)\n",
+		        index, cast_handle->dsp_function_index);
+		return(NOT_OKAY);
+	}
+#endif
 	if( ((*cast_handle->comSftDspInitPtr[index])(param_addr,
 								    cast_handle->dsp_memory,
 									 cast_handle->dsp_memory_size,

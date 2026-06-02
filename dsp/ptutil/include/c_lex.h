@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _C_LEX_H_
 #define _C_LEX_H_
 
+#include "dsp_long_compat_begin.h"
+
 #include "dspfxp_studioverb.h"
 
 /* Value defines */
@@ -217,5 +219,7 @@ struct dspLexStructType
 #define LEX_PRE_DELAY                   30L + COMM_MEM_OFFSET
 #define LEX_MOTION_DEPTH                31L + COMM_MEM_OFFSET
 #define LEX_MOTION_RATE                 32L + COMM_MEM_OFFSET
+
+#include "dsp_long_compat_end.h"
 
 #endif /* _C_LEX_H_ */

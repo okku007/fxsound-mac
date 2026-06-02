@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _C_MAX_H_
 #define _C_MAX_H_
 
+#include "dsp_long_compat_begin.h"
+
 /* Defines */
 #define MAXIMIZE_NUM_QUANTIZE_SETTINGS 5
 #define MAXIMIZE_NUM_DITHER_TYPES 4
@@ -135,5 +137,7 @@ struct dspMaxiStructType
 #define MAXIMIZE_MAX_DELAY         25L + COMM_MEM_OFFSET
 #define MAXIMIZE_QUANTIZE_ON       26L + COMM_MEM_OFFSET
 #define MAXIMIZE_TARGET_LEVEL      27L + COMM_MEM_OFFSET
+
+#include "dsp_long_compat_end.h"
 
 #endif /* _C_MAX_H_ */

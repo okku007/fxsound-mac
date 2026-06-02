@@ -123,6 +123,19 @@ void MainComponent::buildEqSliders()
         };
         addAndMakeVisible(s);
         eqSliders.add(s);
+
+        const float freq = controller.getEqBandFrequency(b);
+        juce::String label;
+        if (freq >= 1000.0f)
+            label = juce::String(freq / 1000.0f, 1) + "k";
+        else
+            label = juce::String((int) freq);
+
+        auto* lbl = new juce::Label({}, label);
+        lbl->setJustificationType(juce::Justification::centred);
+        lbl->setFont(juce::Font(11.0f));
+        addAndMakeVisible(lbl);
+        eqFreqLabels.add(lbl);
     }
 }
 
@@ -196,13 +209,18 @@ void MainComponent::resized()
 
     r.removeFromTop(8);
 
-    // EQ sliders
+    // EQ sliders + frequency labels
     if (! eqSliders.isEmpty())
     {
-        auto eqArea = r.removeFromTop(160);
+        auto eqArea = r.removeFromTop(172);
+        auto labelRow = eqArea.removeFromBottom(16);
         const int w = eqArea.getWidth() / eqSliders.size();
-        for (auto* s : eqSliders)
-            s->setBounds(eqArea.removeFromLeft(w).reduced(2, 0));
+        const int lw = labelRow.getWidth() / eqFreqLabels.size();
+        for (int i = 0; i < eqSliders.size(); ++i)
+        {
+            eqSliders[i]->setBounds(eqArea.removeFromLeft(w).reduced(2, 0));
+            eqFreqLabels[i]->setBounds(labelRow.removeFromLeft(lw));
+        }
     }
 
     r.removeFromTop(8);

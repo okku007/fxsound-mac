@@ -181,7 +181,20 @@ void DfxDspPrivate::processTimer()
 
 int DfxDspPrivate::processAudio(short int *si_input_samples, short int *si_output_samples, int i_num_sample_sets, int i_check_for_duplicate_buffers)
 {
+#if defined(__APPLE__)
+    {
+        static int s_priv_buf = 0;
+        if (++s_priv_buf <= 6)
+            fprintf(stderr, "[DfxPriv buf#%d] num_sets=%d\n", s_priv_buf, i_num_sample_sets);
+    }
+#endif
+
+#if !defined(__APPLE__)
+	// On macOS, processTimer() causes silence after the first buffer because
+	// dfxpCommunicateAll() corrupts the DSP filter state when called mid-stream.
+	// The DSP is already initialized correctly by dfxpBeginProcess() in setSignalFormat().
 	processTimer();
+#endif
 	// Apply DFX processing here using data and format vars above. Format will always be 32 bit floating point.
 	if (dfxpUniversalModifySamples(dfxp_handle_, si_input_samples, si_output_samples, i_num_sample_sets, i_check_for_duplicate_buffers) != OKAY)
 		return(NOT_OKAY);
@@ -193,6 +206,15 @@ int DfxDspPrivate::setSignalFormat(int i_bps, int i_nch, int i_srate, int i_vali
 {
 	if (dfxpUniversalSetSignalFormat(dfxp_handle_, i_bps, i_nch, i_srate, i_valid_bits) != OKAY)
 		return(NOT_OKAY);
+
+#if defined(__APPLE__)
+	// On macOS, dfxpCommunicateAll() is called by dfxpBeginProcess() inside
+	// dfxpUniversalSetSignalFormat(). However, processTimer() in processAudio()
+	// calls it again on the first buffer which corrupts the DSP filter state for
+	// subsequent buffers. We call it once more here so the DSP is fully initialized
+	// before audio starts, and skip processTimer() in processAudio() on macOS.
+	dfxpCommunicateAll(dfxp_handle_);
+#endif
 
 	return OKAY;
 }
@@ -263,31 +285,31 @@ void DfxDspPrivate::setEffectValue(DfxDsp::Effect effect, float value)
 	case DfxDsp::Effect::Fidelity:
 		button = DFX_UI_BUTTON_FIDELITY;
 		knob = DFX_UI_KNOB_FIDELITY;
-		fidelity_.value = (realtype)value / (realtype)10.0;
+		fidelity_.value = (realtype)value;
 		break;
 
 	case DfxDsp::Effect::Ambience:
 		button = DFX_UI_BUTTON_AMBIENCE;
 		knob = DFX_UI_KNOB_AMBIENCE;
-		ambience_.value = (realtype)value / (realtype)10.0;
+		ambience_.value = (realtype)value;
 		break;
 
 	case DfxDsp::Effect::Surround:
 		button = DFX_UI_BUTTON_SURROUND;
 		knob = DFX_UI_KNOB_SURROUND;
-		surround_.value = (realtype)value / (realtype)10.0;
+		surround_.value = (realtype)value;
 		break;
 
 	case DfxDsp::Effect::DynamicBoost:
 		button = DFX_UI_BUTTON_DYNAMIC_BOOST;
 		knob = DFX_UI_KNOB_DYNAMIC_BOOST;
-		dynamic_boost_.value = (realtype)value / (realtype)10.0;
+		dynamic_boost_.value = (realtype)value;
 		break;
 
 	case DfxDsp::Effect::Bass:
 		button = DFX_UI_BUTTON_BASS_BOOST;
 		knob = DFX_UI_KNOB_BASS_BOOST;
-		bass_boost_.value = (realtype)value / (realtype)10.0;
+		bass_boost_.value = (realtype)value;
 		break;
 
 	default:
@@ -303,7 +325,7 @@ void DfxDspPrivate::setEffectValue(DfxDsp::Effect effect, float value)
 		dfxpSetButtonValue(dfxp_handle_, button, 0);
 	}
 
-	dfxpSetKnobValue(dfxp_handle_, knob, (realtype)value / (realtype)10.0, false);
+	dfxpSetKnobValue(dfxp_handle_, knob, (realtype)value, false);
 }
 
 unsigned long DfxDspPrivate::getTotalAudioProcessedTime()

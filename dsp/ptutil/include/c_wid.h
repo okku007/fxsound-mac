@@ -16,7 +16,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef _C_WID_H_
-#define _C_WID_H_             
+#define _C_WID_H_
+
+#include "dsp_long_compat_begin.h"
 
 #define WID_DISPERSION_MIN_MS 0.5
 #define WID_DISPERSION_MAX_MS 25.0
@@ -115,6 +117,8 @@ struct dspWideStructType
 	realtype in2_minus1;
 	realtype in2_minus2;
 };
+
+#include "dsp_long_compat_end.h"
 
 #endif
 /* _C_WID_H_ */

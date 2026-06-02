@@ -59,10 +59,14 @@ int PT_DECLSPEC comMemReInitialize(PT_HANDLE *hp_com, realtype r_sampling_freq)
 	cast_handle = (struct comHdlType *)hp_com;
 
 	if (cast_handle == NULL)
+#if defined(__APPLE__)
+		return(OKAY);  // Non-front channels are NULL on macOS — silently skip
+#else
 		return(NOT_OKAY);
+#endif
 
    /* Currently just does a reinitialization of memory. Flag can be set to also init parameters */
-	if( comSftwrInitDspAlgorithmCPP(cast_handle->comSftwr_hdl, r_sampling_freq, 
+	if( comSftwrInitDspAlgorithmCPP(cast_handle->comSftwr_hdl, r_sampling_freq,
 	                                DSPS_RE_INIT_MEMORY) != OKAY)
 		return(NOT_OKAY);
 

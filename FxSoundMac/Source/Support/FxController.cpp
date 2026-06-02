@@ -16,6 +16,7 @@ float FxController::getEffect(DfxDsp::Effect e) const   { return adapter.getEffe
 void FxController::setEqBand(int band, float db)  { adapter.setEqBandBoostCut(band, db); }
 float FxController::getEqBand(int band) const     { return adapter.getEqBandBoostCut(band); }
 int FxController::getNumEqBands() const           { return adapter.getNumEqBands(); }
+float FxController::getEqBandFrequency(int b) const { return adapter.getEqBandFrequency(b); }
 
 void FxController::setOutputGainDb(float db)  { adapter.setOutputGainDb(db); }
 float FxController::getOutputGainDb() const   { return adapter.getOutputGainDb(); }
