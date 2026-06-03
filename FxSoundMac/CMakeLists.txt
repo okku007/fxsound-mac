@@ -36,8 +36,23 @@ if(EXISTS "${_juce_windowing_patch}")
     endif()
 endif()
 
+# Bundle SVG assets and Gilroy fonts as compile-time binary data.
+juce_add_binary_data(FxSoundMacAssets
+    SOURCES
+        Resources/Images/power_on.svg
+        Resources/Images/power_off.svg
+        Resources/Images/Slider_Thumb.svg
+        Resources/Images/Slider_Thumb_bw.svg
+        Resources/Images/dropdown_arrow_hover.svg
+        Resources/Images/dropdown_arrow_bw.svg
+        Resources/Images/logo-white.svg
+        Resources/Fonts/Gilroy-Regular.ttf
+        Resources/Fonts/Gilroy-Semibold.ttf
+        Resources/Fonts/Gilroy-Bold.ttf
+)
+
 juce_add_gui_app(FxSoundMac
-    PRODUCT_NAME "FxSoundMac"
+    PRODUCT_NAME "FxSound"
     BUNDLE_ID "com.fxsound.mac"
     MICROPHONE_PERMISSION_ENABLED TRUE
     MICROPHONE_PERMISSION_TEXT "FxSound needs audio input access to capture system audio from the BlackHole virtual device for real-time processing."
@@ -51,6 +66,10 @@ target_sources(FxSoundMac PRIVATE
     Source/Audio/MacAudioEngine.cpp
     Source/Support/PresetLibrary.cpp
     Source/Support/FxController.cpp
+    Source/UI/FxTheme.cpp
+    Source/UI/FxPowerButton.cpp
+    Source/UI/FxEffects.cpp
+    Source/UI/FxEqualizer.cpp
     Source/UI/MainComponent.cpp
     Source/UI/SetupStatusPanel.cpp
 )
@@ -69,6 +88,7 @@ target_link_libraries(FxSoundMac PRIVATE
     juce::juce_gui_extra
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
+    FxSoundMacAssets
     DfxDspMac
 )
 

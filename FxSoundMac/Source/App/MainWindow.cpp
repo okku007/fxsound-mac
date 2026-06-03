@@ -5,11 +5,11 @@ MainWindow::MainWindow(const juce::String& name)
     : juce::DocumentWindow(name,
         juce::Desktop::getInstance().getDefaultLookAndFeel()
             .findColour(juce::ResizableWindow::backgroundColourId),
-        juce::DocumentWindow::allButtons)
+        juce::DocumentWindow::minimiseButton | juce::DocumentWindow::closeButton)
 {
     setUsingNativeTitleBar(true);
     setContentOwned(new MainComponent(), true);
-    setResizable(true, true);
+    setResizable(false, false);
     centreWithSize(getWidth(), getHeight());
     setVisible(true);
 }

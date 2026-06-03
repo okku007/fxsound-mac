@@ -1,11 +1,17 @@
 #include "MainComponent.h"
+#include "FxTheme.h"
 #include "../Audio/DeviceValidation.h"
+#include <BinaryData.h>
 
 namespace {
-const char* kEffectNames[DfxDsp::NumEffects] = {
-    "Fidelity", "Ambience", "Surround", "Dynamic Boost", "Bass"
-};
-}
+// Layout constants matching Windows FxProView proportions
+constexpr int kMargin   = 40;
+constexpr int kHeaderH  = 60;
+constexpr int kComboH   = 50;
+constexpr int kGap      = 8;
+constexpr int kMainH    = 242;
+constexpr int kStatusH  = 62;
+} // namespace
 
 juce::File MainComponent::bundledPresetDir()
 {
@@ -16,92 +22,75 @@ juce::File MainComponent::bundledPresetDir()
 MainComponent::MainComponent()
 {
     controller.prepare(48000, 512);
-
-    // Power on by default — DSP initializes with bypass=1 (power off),
-    // so we must explicitly enable it on startup.
     controller.setPower(true);
 
-    // Power
-    addAndMakeVisible(powerButton);
-    powerButton.setToggleState(true, juce::dontSendNotification);
-    powerButton.onClick = [this] {
-        controller.setPower(powerButton.getToggleState());
-    };
+    // Logo SVG (drawn in paint)
+    logo_ = juce::Drawable::createFromImageData(BinaryData::logowhite_svg,
+                                                 BinaryData::logowhite_svgSize);
 
-    // Bypass
-    addAndMakeVisible(bypassButton);
-    bypassButton.onClick = [this] {
-        controller.setBypassed(bypassButton.getToggleState());
-    };
+    // Power button
+    powerButton.setPowerState(true);
+    powerButton.onClick = [this] { updatePowerState(powerButton.getToggleState()); };
+    addAndMakeVisible(powerButton);
 
     // Preset selector
     addAndMakeVisible(presetBox);
+    presetBox.setTextWhenNothingSelected("Select Preset");
     presetBox.onChange = [this] {
         const int idx = presetBox.getSelectedItemIndex();
         if (idx >= 0)
         {
             const bool ok = controller.loadPreset(presetLibrary.getPresetFile(idx));
-            if (! ok)
+            if (ok)
+            {
+                effectsPanel.update();
+                equalizerPanel.update();
+            }
+            else
+            {
                 statusPanel.setStatus({ AudioEngineState::PresetFailedToLoad,
                                         presetLibrary.getPresetName(idx) });
+            }
         }
     };
 
     // Output selector
     addAndMakeVisible(outputBox);
+    outputBox.setTextWhenNothingSelected("Select Output");
 
-    // Start/Stop
+    // Start / Stop
     addAndMakeVisible(startStopButton);
     startStopButton.onClick = [this] { startOrStopAudio(); };
 
-    // Effect sliders
-    for (int i = 0; i < DfxDsp::NumEffects; ++i)
-    {
-        auto& s = effectSliders[i];
-        s.setRange(0.0, 1.0, 0.01);
-        s.setValue(0.5, juce::dontSendNotification);
-        s.onValueChange = [this, i] {
-            controller.setEffect(static_cast<DfxDsp::Effect>(i),
-                                 (float) effectSliders[i].getValue());
-        };
-        addAndMakeVisible(s);
+    // Main panels
+    addAndMakeVisible(effectsPanel);
+    addAndMakeVisible(equalizerPanel);
 
-        effectLabels[i].setText(kEffectNames[i], juce::dontSendNotification);
-        effectLabels[i].setJustificationType(juce::Justification::centred);
-        addAndMakeVisible(effectLabels[i]);
-    }
-
-    // Output gain
-    outputGainSlider.setRange(LegacyDspAdapter::minOutputGainDb,
-                              LegacyDspAdapter::maxOutputGainDb, 0.1);
-    outputGainSlider.setValue(0.0, juce::dontSendNotification);
-    outputGainSlider.onValueChange = [this] {
-        controller.setOutputGainDb((float) outputGainSlider.getValue());
-    };
-    addAndMakeVisible(outputGainSlider);
-    addAndMakeVisible(outputGainLabel);
-
-    // EQ sliders
-    buildEqSliders();
-
-    // Status panel
+    // Status
     addAndMakeVisible(statusPanel);
 
-    // Engine status callback (called on message thread)
+    // Engine status callback (always called on message thread by MacAudioEngine)
     engine.onStatusChanged = [this](AudioEngineStatus s) {
         juce::MessageManager::callAsync([this, s] { statusPanel.setStatus(s); });
     };
 
-    // Populate UI
+    // Populate dropdowns
     refreshPresets();
     refreshOutputDevices();
 
-    // Initial status guidance
+    // Prime panels from current DSP state
+    updatePowerState(true);
+    effectsPanel.update();
+    equalizerPanel.update();
+    equalizerPanel.showValues(true);
+    effectsPanel.showValues(true);
+
+    // Initial status hint
     const auto bh = DeviceValidation::findBlackHoleDevice(engine.getInputDeviceNames());
     statusPanel.setStatus({ bh.isEmpty() ? AudioEngineState::BlackHoleNotInstalled
                                          : AudioEngineState::NoOutputSelected, {} });
 
-    setSize(720, 580);
+    setSize(1040, kHeaderH + kComboH + kGap + kMainH + kGap + kStatusH);
 }
 
 MainComponent::~MainComponent()
@@ -109,45 +98,11 @@ MainComponent::~MainComponent()
     engine.stop();
 }
 
-void MainComponent::buildEqSliders()
+void MainComponent::updatePowerState(bool on)
 {
-    const int n = juce::jmax(0, controller.getNumEqBands());
-    for (int b = 0; b < n; ++b)
-    {
-        auto* s = new juce::Slider();
-        s->setSliderStyle(juce::Slider::LinearVertical);
-        s->setRange(-12.0, 12.0, 0.1);
-        s->setValue(0.0, juce::dontSendNotification);
-        s->onValueChange = [this, b, s] {
-            controller.setEqBand(b, (float) s->getValue());
-        };
-        addAndMakeVisible(s);
-        eqSliders.add(s);
-
-        const float freq = controller.getEqBandFrequency(b);
-        juce::String label;
-        if (freq >= 1000.0f)
-        {
-            const float khz = freq / 1000.0f;
-            if (khz >= 10.0f)
-                // ≥10 kHz: round to nearest integer to keep label ≤3 chars ("13k" not "12.5k")
-                label = juce::String(juce::roundToInt(khz)) + "k";
-            else if (khz == (float)(int)khz)
-                label = juce::String((int)khz) + "k";
-            else
-                label = juce::String(khz, 1) + "k";
-        }
-        else
-        {
-            label = juce::String((int) freq);
-        }
-
-        auto* lbl = new juce::Label({}, label);
-        lbl->setJustificationType(juce::Justification::centred);
-        lbl->setFont(juce::Font(9.0f));
-        addAndMakeVisible(lbl);
-        eqFreqLabels.add(lbl);
-    }
+    controller.setPower(on);
+    effectsPanel.setEnabled(on);
+    equalizerPanel.setEnabled(on);
 }
 
 void MainComponent::refreshPresets()
@@ -165,7 +120,7 @@ void MainComponent::refreshOutputDevices()
     outputBox.clear(juce::dontSendNotification);
     int id = 1;
     for (const auto& name : engine.getOutputDeviceNames())
-        if (! name.containsIgnoreCase("BlackHole"))
+        if (!name.containsIgnoreCase("BlackHole"))
             outputBox.addItem(name, id++);
 }
 
@@ -174,7 +129,7 @@ void MainComponent::startOrStopAudio()
     if (engine.isRunning())
     {
         engine.stop();
-        startStopButton.setButtonText("Start Audio");
+        startStopButton.setButtonText("Start");
         statusPanel.setStatus({ AudioEngineState::NoOutputSelected,
             "Stopped. If macOS output is still routed to BlackHole, "
             "switch it back to your speakers in System Settings." });
@@ -184,64 +139,46 @@ void MainComponent::startOrStopAudio()
     const auto status = engine.start(outputBox.getText());
     statusPanel.setStatus(status);
     if (status.isHealthy())
-        startStopButton.setButtonText("Stop Audio");
+        startStopButton.setButtonText("Stop");
+}
+
+void MainComponent::paint(juce::Graphics& g)
+{
+    g.fillAll(juce::Colour(FXCOLOR(WindowBackground)));
+
+    // FxSound logo in header area
+    if (logo_)
+        logo_->drawWithin(g, juce::Rectangle<float>(16.0f, 10.0f, 110.0f, 40.0f),
+                          juce::RectanglePlacement::centred
+                              | juce::RectanglePlacement::onlyReduceInSize,
+                          1.0f);
+
+    // Subtle panel background behind the effects + EQ area
+    g.setFillType(juce::FillType(juce::Colour(FXCOLOR(PanelBackground)).withAlpha(0.15f)));
+    g.fillRoundedRectangle(20.0f,
+                            (float)(kHeaderH + kComboH - 4),
+                            (float)(getWidth() - 40),
+                            (float)(kMainH + 20),
+                            8.0f);
 }
 
 void MainComponent::resized()
 {
-    auto r = getLocalBounds().reduced(12);
+    // Header: power button sits right of logo area
+    powerButton.setBounds(135, 12, 36, 36);
 
-    // Row 1: power, bypass, start/stop
-    auto row1 = r.removeFromTop(30);
-    powerButton.setBounds(row1.removeFromLeft(80));
-    row1.removeFromLeft(8);
-    bypassButton.setBounds(row1.removeFromLeft(80));
-    startStopButton.setBounds(row1.removeFromRight(120));
+    // Combos row
+    const int comboY = kHeaderH + 6;
+    presetBox.setBounds(kMargin, comboY, 450, 38);
+    outputBox.setBounds(530, comboY, 390, 38);
+    startStopButton.setBounds(925, comboY, 80, 38);
 
-    r.removeFromTop(8);
+    // Main panels — matching Windows FxProView geometry
+    const int mainY = kHeaderH + kComboH + kGap;
+    effectsPanel.setBounds(kMargin, mainY, 168, 242);
+    equalizerPanel.setBounds(kMargin + 168 + 16, mainY, 776, 242);
 
-    // Row 2: preset + output selectors
-    auto row2 = r.removeFromTop(28);
-    presetBox.setBounds(row2.removeFromLeft(row2.getWidth() / 2 - 4));
-    row2.removeFromLeft(8);
-    outputBox.setBounds(row2);
-
-    r.removeFromTop(8);
-
-    // Effect sliders
-    auto fxArea = r.removeFromTop(160);
-    const int fxW = fxArea.getWidth() / DfxDsp::NumEffects;
-    for (int i = 0; i < DfxDsp::NumEffects; ++i)
-    {
-        auto col = fxArea.removeFromLeft(fxW);
-        effectLabels[i].setBounds(col.removeFromTop(20));
-        effectSliders[i].setBounds(col.reduced(4, 0));
-    }
-
-    r.removeFromTop(8);
-
-    // EQ sliders + frequency labels
-    if (! eqSliders.isEmpty())
-    {
-        auto eqArea = r.removeFromTop(172);
-        auto labelRow = eqArea.removeFromBottom(16);
-        const int w = eqArea.getWidth() / eqSliders.size();
-        const int lw = labelRow.getWidth() / eqFreqLabels.size();
-        for (int i = 0; i < eqSliders.size(); ++i)
-        {
-            eqSliders[i]->setBounds(eqArea.removeFromLeft(w).reduced(2, 0));
-            eqFreqLabels[i]->setBounds(labelRow.removeFromLeft(lw));
-        }
-    }
-
-    r.removeFromTop(8);
-
-    // Output gain
-    outputGainLabel.setBounds(r.removeFromTop(20));
-    outputGainSlider.setBounds(r.removeFromTop(32));
-
-    r.removeFromTop(8);
-
-    // Status panel — takes remaining space
-    statusPanel.setBounds(r);
+    // Status
+    const int statusY = kHeaderH + kComboH + kGap + kMainH + kGap;
+    statusPanel.setBounds(kMargin, statusY, getWidth() - kMargin * 2, kStatusH);
 }
