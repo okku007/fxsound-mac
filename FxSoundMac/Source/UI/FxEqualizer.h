@@ -14,7 +14,7 @@ public:
     void update();
     void showValues(bool show);
 
-    void sliderValueChanged(juce::Slider*) override {}
+    void sliderValueChanged(juce::Slider*) override { repaint(); }
     void sliderDragStarted(juce::Slider* slider) override;
     void sliderDragEnded(juce::Slider* slider) override;
     void timerCallback() override;

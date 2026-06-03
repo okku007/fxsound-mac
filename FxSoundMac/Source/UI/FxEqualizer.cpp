@@ -230,41 +230,43 @@ void FxEqualizer::paint(juce::Graphics& g)
     if (highlight_mode_)
         grad_lo = grad_lo.withSaturation(0.0f);
 
-    // Connecting line between band thumbs
-    for (int i = 0; i < n - 1; ++i)
-    {
-        const float x0 = (float)(band_boosts_[i]->getX()     + band_boosts_[i]->getWidth()     / 2);
-        const float x1 = (float)(band_boosts_[i+1]->getX()   + band_boosts_[i+1]->getWidth()   / 2);
-        const float y0 = band_boosts_[i]->getPositionOfValue(band_boosts_[i]->getValue())     + Y_MARGIN;
-        const float y1 = band_boosts_[i+1]->getPositionOfValue(band_boosts_[i+1]->getValue()) + Y_MARGIN;
-
-        juce::Path seg;
-        seg.addLineSegment(juce::Line<float>(x0, y0, x1, y1), 1.0f);
-        g.setColour(line_colour);
-        g.strokePath(seg, juce::PathStrokeType(1.0f));
-    }
-
-    // Filled shape under the curve
-    juce::Path fill_path;
+    // Build curve points once — shared by fill and line
+    juce::Array<juce::Point<float>> pts;
     for (int i = 0; i < n; ++i)
     {
         const float x = (float)(band_boosts_[i]->getX() + band_boosts_[i]->getWidth() / 2);
         const float y = band_boosts_[i]->getPositionOfValue(band_boosts_[i]->getValue()) + Y_MARGIN;
-
-        if (i == 0)
-            fill_path.startNewSubPath(x, (float)(band_boosts_[i]->getBottom() - FxTheme::SLIDER_THUMB_RADIUS));
-
-        fill_path.lineTo(x, y);
-
-        if (i == n - 1)
-            fill_path.lineTo(x, (float)(band_boosts_[i]->getBottom() - FxTheme::SLIDER_THUMB_RADIUS));
+        pts.add({ x, y });
     }
-    fill_path.closeSubPath();
 
-    const auto gradient = juce::ColourGradient(grad_hi, 0.0f, (float)band_boosts_[1]->getY(),
-                                                grad_lo, 0.0f, (float)band_boosts_[1]->getBottom(), false);
-    g.setFillType(juce::FillType(gradient));
-    g.fillPath(fill_path);
+    // Filled shape under the curve — drawn first so line renders on top
+    {
+        const float base = (float)(band_boosts_[0]->getBottom() - FxTheme::SLIDER_THUMB_RADIUS);
+        juce::Path fill_path;
+        fill_path.startNewSubPath(pts[0].x, base);
+        for (auto& p : pts)
+            fill_path.lineTo(p);
+        fill_path.lineTo(pts.getLast().x, base);
+        fill_path.closeSubPath();
+
+        const auto gradient = juce::ColourGradient(grad_hi, 0.0f, (float)band_boosts_[0]->getY(),
+                                                    grad_lo, 0.0f, (float)band_boosts_[0]->getBottom(), false);
+        g.setFillType(juce::FillType(gradient));
+        g.fillPath(fill_path);
+    }
+
+    // Connecting line on top — fully visible over the fill
+    {
+        juce::Path line_path;
+        for (int i = 0; i < n; ++i)
+        {
+            if (i == 0) line_path.startNewSubPath(pts[0]);
+            else        line_path.lineTo(pts[i]);
+        }
+        g.setColour(line_colour);
+        g.strokePath(line_path, juce::PathStrokeType(1.5f, juce::PathStrokeType::curved,
+                                                      juce::PathStrokeType::rounded));
+    }
 }
 
 // ──────────────────────────────────────────────────────────── FxEqSlider
@@ -325,6 +327,9 @@ void FxEqualizer::FxEqSlider::valueChanged()
         const int y = (int)(getPositionOfValue(db)) - FxTheme::SLIDER_THUMB_RADIUS * 3;
         gain_label_.setBounds(gain_label_.getBounds().withY(y));
     }
+
+    if (auto* parent = getParentComponent())
+        parent->repaint();
 }
 
 bool FxEqualizer::FxEqSlider::keyPressed(const juce::KeyPress& key)
