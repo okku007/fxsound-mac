@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "../UI/MainComponent.h"
+#include "../Support/AppSettings.h"
 
 MainWindow::MainWindow(const juce::String& name)
     : juce::DocumentWindow(name,
@@ -16,5 +17,15 @@ MainWindow::MainWindow(const juce::String& name)
 
 void MainWindow::closeButtonPressed()
 {
-    juce::JUCEApplication::getInstance()->systemRequestedQuit();
+    if (AppSettings::closeQuitsApp())
+    {
+        juce::JUCEApplication::getInstance()->systemRequestedQuit();
+    }
+    else
+    {
+        // Keep the app running with no visible window. Hiding the whole app means
+        // macOS re-shows it (this window included) when its Dock icon is clicked —
+        // no custom reopen handler required.
+        juce::Process::hide();
+    }
 }

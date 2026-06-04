@@ -46,6 +46,7 @@ juce_add_binary_data(FxSoundMacAssets
         Resources/Images/dropdown_arrow_hover.svg
         Resources/Images/dropdown_arrow_bw.svg
         Resources/Images/logo-white.svg
+        Resources/Images/settings.svg
         Resources/Fonts/Gilroy-Regular.ttf
         Resources/Fonts/Gilroy-Semibold.ttf
         Resources/Fonts/Gilroy-Bold.ttf
@@ -54,6 +55,7 @@ juce_add_binary_data(FxSoundMacAssets
 juce_add_gui_app(FxSoundMac
     PRODUCT_NAME "FxSound"
     BUNDLE_ID "com.fxsound.mac"
+    ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.png"
     MICROPHONE_PERMISSION_ENABLED TRUE
     MICROPHONE_PERMISSION_TEXT "FxSound needs audio input access to capture system audio from the BlackHole virtual device for real-time processing."
 )
@@ -154,4 +156,15 @@ add_custom_command(TARGET FxSoundMac POST_BUILD
         "${FXMAC_PRESET_DIR}"
         "$<TARGET_BUNDLE_CONTENT_DIR:FxSoundMac>/Resources/Presets"
     COMMENT "Bundling presets into FxSoundMac.app"
+)
+
+# JUCE's ICON_BIG generator emits a single-resolution .icns (only ic08/256px),
+# which macOS won't render in the Dock (shows the generic placeholder). Overwrite
+# it with a full multi-resolution AppIcon.icns (16…1024 incl. @2x). CFBundleIconFile
+# already points at Icon.icns, so replacing the file is enough.
+add_custom_command(TARGET FxSoundMac POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.icns"
+        "$<TARGET_BUNDLE_CONTENT_DIR:FxSoundMac>/Resources/Icon.icns"
+    COMMENT "Installing full-resolution app icon"
 )
