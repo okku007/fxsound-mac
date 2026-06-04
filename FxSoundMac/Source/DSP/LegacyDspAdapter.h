@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <atomic>
+#include <vector>
 #include "DfxDsp.h"
 
 // Narrow, macOS-facing wrapper around the reusable FxSound DSP.
@@ -40,6 +41,9 @@ public:
     // Loads a .fac preset by absolute path. Returns true on success.
     bool loadPreset(const juce::File& presetFile);
 
+    // Saves the current DSP state (effects + EQ) as <name>.fac inside directory.
+    bool savePreset(const juce::File& directory, const juce::String& name);
+
     // Processes a stereo float buffer in place. Honors bypass.
     void process(juce::AudioBuffer<float>& buffer);
 
@@ -47,9 +51,19 @@ private:
     DfxDsp dsp;
     int currentSampleRate = 48000;
     std::atomic<bool> bypassed { false };
-    std::atomic<float> outputGainDb { 0.0f };
+    std::atomic<float> outputGainDb { 0.0f };  // Maximizer compensates the -6 dB from kDspInputScale; no extra post-gain needed
 
-    juce::HeapBlock<short> inInt16, outInt16;
+    // Desired control state, re-applied after every setSignalFormat() in prepare().
+    // (Re)starting the audio device re-runs prepare(), which re-inits the DSP and
+    // would otherwise wipe the user's effect/EQ settings until a slider is touched.
+    // The setters and loadPreset() keep these in sync so restart restores state.
+    float effectCache_[static_cast<int>(DfxDsp::NumEffects)] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    std::vector<float> eqCache_;
+    bool  powerCache_ = false;
+
+    void reapplyState();
+
+    juce::HeapBlock<float> inFloat, outFloat;
     int allocatedFrames = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LegacyDspAdapter)

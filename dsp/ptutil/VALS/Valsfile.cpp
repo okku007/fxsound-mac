@@ -66,7 +66,11 @@ int PT_DECLSPEC valsSave(PT_HANDLE *hp_vals, wchar_t *wcp_dir_path, wchar_t *wcp
 		return(NOT_OKAY);
 
 	/* Construct the fullpath */
+#if defined(__APPLE__)
+	swprintf(fullpath_str, L"%ls/%ls", wcp_dir_path, wcp_filename);   // macOS uses '/'
+#else
 	swprintf(fullpath_str, L"%s\\%s", wcp_dir_path, wcp_filename);
+#endif
 
 	/* Open the file for writing */
 	stream = fileOpen_Wide(fullpath_str, L"w", cast_handle->slout_hdl);

@@ -28,6 +28,7 @@ public:
     float getOutputGainDb() const;
 
     bool loadPreset(const juce::File& presetFile); // message thread only
+    bool savePreset(const juce::File& directory, const juce::String& name); // message thread only
 
     // Audio thread — delegates directly to adapter, no locks.
     void processBlock(juce::AudioBuffer<float>& buffer);

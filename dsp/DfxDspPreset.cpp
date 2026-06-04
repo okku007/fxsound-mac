@@ -83,11 +83,19 @@ int DfxDspPrivate::loadPreset(std::wstring preset_file_full_path)
 	//if (dfxg_PresetCalcAndSetDirtyFlag(hp_dfxg) != OKAY)
 	//return(NOT_OKAY);
 
-	/*setEffectValue(DfxDsp::Effect::Fidelity, fidelity_.value*10.0f);
-	setEffectValue(DfxDsp::Effect::Ambience, ambience_.value*10.0f);
-	setEffectValue(DfxDsp::Effect::Surround, surround_.value*10.0f);
-	setEffectValue(DfxDsp::Effect::DynamicBoost, dynamic_boost_.value*10.0f);
-	setEffectValue(DfxDsp::Effect::Bass, bass_boost_.value*10.0f);*/
+#if defined(__APPLE__)
+	// getStateInfoFromVals() only updates the cached members + the live EQ handle;
+	// dfxg_CommunicateAll() is commented out and the macOS build disables processTimer,
+	// so the loaded effect values never reach the knobs/buttons (and getEffectValue,
+	// which reads the knob, returns DSP defaults). Push them now so both the live DSP
+	// and the UI reflect the preset. Values are already in [0,1] (same qnt handle as
+	// getEffectValue) — do NOT scale by 10. A bypassed effect contributes 0.
+	setEffectValue(DfxDsp::Effect::Fidelity,     fidelity_.bypass      ? 0.0f : (float)fidelity_.value);
+	setEffectValue(DfxDsp::Effect::Ambience,     ambience_.bypass      ? 0.0f : (float)ambience_.value);
+	setEffectValue(DfxDsp::Effect::Surround,     surround_.bypass      ? 0.0f : (float)surround_.value);
+	setEffectValue(DfxDsp::Effect::DynamicBoost, dynamic_boost_.bypass ? 0.0f : (float)dynamic_boost_.value);
+	setEffectValue(DfxDsp::Effect::Bass,         bass_boost_.bypass    ? 0.0f : (float)bass_boost_.value);
+#endif
 
 	/* Free the vals handle */
 	if (valsFreeUp(&new_vals_hdl) != OKAY)

@@ -26,6 +26,11 @@ bool FxController::loadPreset(const juce::File& presetFile)
     return adapter.loadPreset(presetFile);
 }
 
+bool FxController::savePreset(const juce::File& directory, const juce::String& name)
+{
+    return adapter.savePreset(directory, name);
+}
+
 void FxController::processBlock(juce::AudioBuffer<float>& buffer)
 {
     if (! prepared) return;

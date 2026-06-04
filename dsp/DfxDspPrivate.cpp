@@ -181,14 +181,6 @@ void DfxDspPrivate::processTimer()
 
 int DfxDspPrivate::processAudio(short int *si_input_samples, short int *si_output_samples, int i_num_sample_sets, int i_check_for_duplicate_buffers)
 {
-#if defined(__APPLE__)
-    {
-        static int s_priv_buf = 0;
-        if (++s_priv_buf <= 6)
-            fprintf(stderr, "[DfxPriv buf#%d] num_sets=%d\n", s_priv_buf, i_num_sample_sets);
-    }
-#endif
-
 #if !defined(__APPLE__)
 	// On macOS, processTimer() causes silence after the first buffer because
 	// dfxpCommunicateAll() corrupts the DSP filter state when called mid-stream.
@@ -254,25 +246,41 @@ bool DfxDspPrivate::isPowerOn()
 
 float DfxDspPrivate::getEffectValue(DfxDsp::Effect effect)
 {
+	// Read from session state so loadPreset() values are reflected.
+	// The cached fidelity_.value etc. are only set by setEffectValue(),
+	// not by preset loads, so they go stale after loadPreset().
+	int knob_type;
 	switch (effect)
 	{
-	case DfxDsp::Effect::Fidelity:
-		return fidelity_.value;
-
-	case DfxDsp::Effect::Ambience:
-		return ambience_.value;
-
-	case DfxDsp::Effect::Surround:
-		return surround_.value;
-
-	case DfxDsp::Effect::DynamicBoost:
-		return dynamic_boost_.value;
-
-	case DfxDsp::Effect::Bass:
-		return bass_boost_.value;
+	case DfxDsp::Effect::Fidelity:    knob_type = DFX_UI_KNOB_FIDELITY;      break;
+	case DfxDsp::Effect::Ambience:    knob_type = DFX_UI_KNOB_AMBIENCE;       break;
+	case DfxDsp::Effect::Surround:    knob_type = DFX_UI_KNOB_SURROUND;       break;
+	case DfxDsp::Effect::DynamicBoost: knob_type = DFX_UI_KNOB_DYNAMIC_BOOST; break;
+	case DfxDsp::Effect::Bass:        knob_type = DFX_UI_KNOB_BASS_BOOST;     break;
+	default: return -1.0f;
 	}
 
-	return -1.0f;
+	int midi_val = 0;
+	if (dfxp_GetKnobValue_MIDI(dfxp_handle_, knob_type, &midi_val) != OKAY)
+	{
+		// Fall back to cached value on error
+		switch (effect)
+		{
+		case DfxDsp::Effect::Fidelity:     return fidelity_.value;
+		case DfxDsp::Effect::Ambience:     return ambience_.value;
+		case DfxDsp::Effect::Surround:     return surround_.value;
+		case DfxDsp::Effect::DynamicBoost: return dynamic_boost_.value;
+		case DfxDsp::Effect::Bass:         return bass_boost_.value;
+		default: return -1.0f;
+		}
+	}
+
+	realtype r_value = 0.0;
+	if (midi_to_rval_qnt_handle_ == NULL ||
+	    qntIToRCalc(midi_to_rval_qnt_handle_, midi_val, &r_value) != OKAY)
+		return (float)midi_val / 127.0f;
+
+	return (float)r_value;
 }
 
 void DfxDspPrivate::setEffectValue(DfxDsp::Effect effect, float value)
