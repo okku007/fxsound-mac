@@ -121,6 +121,65 @@ static inline int CompareFileTime(const struct FILETIME* ft1, const struct FILET
 //
 // SAFETY: The 2-arg overload is bounded to PT_MAX_PATH_STRLEN, not an
 // arbitrary large value. This matches the actual buffer sizes in the DSP code.
+//
+// WIDE-STRING FORMAT FIX: macOS libc treats %s in a wide-char format as a
+// NARROW (char*) string, whereas the Windows-origin DSP uses %s to mean a WIDE
+// (wchar_t*) string. Untranslated, every wide string arg is read as a multibyte
+// string and collapses to its first byte (e.g. registry key L"byAll" -> "b"),
+// silently colliding distinct session keys and corrupting bypass/effect state.
+// pt_mac_fix_wide_fmt rewrites bare %s -> %ls (leaving %%, %ls, %hs, %S and any
+// width/precision/flags intact) so wide args print correctly. Windows is
+// unaffected (it uses the real swprintf where %s already means wide).
+static inline void pt_mac_fix_wide_fmt(const wchar_t* fmt, wchar_t* out, size_t out_n)
+{
+    size_t o = 0;
+    if (out_n == 0) return;
+    for (size_t i = 0; fmt[i] != L'\0'; )
+    {
+        wchar_t c = fmt[i];
+        if (c != L'%')
+        {
+            if (o + 1 < out_n) out[o++] = c;
+            ++i;
+            continue;
+        }
+        if (o + 1 < out_n) out[o++] = c;   // copy the '%'
+        ++i;
+        if (fmt[i] == L'%')                 // literal "%%"
+        {
+            if (o + 1 < out_n) out[o++] = fmt[i];
+            ++i;
+            continue;
+        }
+        int has_len = 0;
+        // Copy flags/width/precision/length modifiers up to the conversion char.
+        while (fmt[i] != L'\0')
+        {
+            wchar_t cc = fmt[i];
+            if (cc == L'l' || cc == L'h' || cc == L'L' || cc == L'w')
+                has_len = 1;
+            if (wcschr(L"diouxXeEfFgGaAcspnS", cc) != NULL)   // conversion char
+            {
+                if (cc == L's' && !has_len)                   // bare %s -> %ls
+                    if (o + 1 < out_n) out[o++] = L'l';
+                if (o + 1 < out_n) out[o++] = cc;
+                ++i;
+                break;
+            }
+            if (o + 1 < out_n) out[o++] = cc;
+            ++i;
+        }
+    }
+    out[o < out_n ? o : out_n - 1] = L'\0';
+}
+
+static inline int pt_mac_vswprintf_fixed(wchar_t* buf, size_t n, const wchar_t* fmt, va_list ap)
+{
+    wchar_t fixed[1024];
+    pt_mac_fix_wide_fmt(fmt, fixed, 1024);
+    return vswprintf(buf, n, fixed, ap);
+}
+
 #ifdef __cplusplus
 
 #define swprintf pt_mac_swprintf_compat
@@ -129,7 +188,7 @@ inline int pt_mac_swprintf_compat(wchar_t* buf, size_t n, const wchar_t* fmt, ..
 {
     va_list args;
     va_start(args, fmt);
-    int r = vswprintf(buf, n, fmt, args);
+    int r = pt_mac_vswprintf_fixed(buf, n, fmt, args);
     va_end(args);
     return r;
 }
@@ -140,7 +199,7 @@ inline int pt_mac_swprintf_compat(wchar_t* buf, const wchar_t* fmt, ...)
     // Every 2-arg swprintf call site in the DSP uses a buffer of this size.
     va_list args;
     va_start(args, fmt);
-    int r = vswprintf(buf, 1024, fmt, args);
+    int r = pt_mac_vswprintf_fixed(buf, 1024, fmt, args);
     va_end(args);
     return r;
 }
@@ -177,10 +236,19 @@ inline int _wfopen_s(FILE** pFile, const wchar_t* filename, const wchar_t* mode)
 
 #else // C mode
 
-// C mode: use a variadic macro. All DSP C sources use the 2-arg MSVC form.
+// C mode: route through pt_mac_swprintf_c so the wide-format fix applies here too.
+// All DSP C sources use the 2-arg MSVC form.
 // 1024 == PT_MAX_PATH_STRLEN — the correct bound for all C-mode call sites.
+static inline int pt_mac_swprintf_c(wchar_t* buf, const wchar_t* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    int r = pt_mac_vswprintf_fixed(buf, 1024, fmt, args);
+    va_end(args);
+    return r;
+}
 #undef swprintf
-#define swprintf(buf, fmt, ...) vswprintf((buf), 1024, (fmt), ##__VA_ARGS__)
+#define swprintf(buf, fmt, ...) pt_mac_swprintf_c((buf), (fmt), ##__VA_ARGS__)
 
 // Numeric conversion macros for C
 #define _wtoi(s) ((int)wcstol((s), NULL, 10))
