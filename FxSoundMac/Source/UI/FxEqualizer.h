@@ -46,7 +46,7 @@ private:
     static constexpr int WIDTH             = 776;
     static constexpr int HEIGHT            = 242;
     static constexpr int SLIDER_HEIGHT     = 190;
-    static constexpr int LABEL_HEIGHT      = 12;
+    static constexpr int LABEL_HEIGHT      = 16;  // room for freq label so it isn't vertically clipped
     static constexpr int X_MARGIN         = 16;
     static constexpr int Y_MARGIN         = 8;
     static constexpr float MAX_GAIN       = 12.0f;

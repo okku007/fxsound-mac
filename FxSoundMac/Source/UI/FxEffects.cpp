@@ -65,8 +65,8 @@ void FxEffects::resized()
     for (int i = 0; i < DfxDsp::NumEffects; ++i)
     {
         labels_[i]->setBounds(X_MARGIN + FxTheme::SLIDER_THUMB_RADIUS, y, SLIDER_WIDTH, LABEL_HEIGHT);
-        effects_[i]->setBounds(X_MARGIN, labels_[i]->getBottom() + 1, SLIDER_WIDTH, SLIDER_HEIGHT);
-        y = effects_[i]->getBottom() + 10;
+        effects_[i]->setBounds(X_MARGIN, labels_[i]->getBottom() + LABEL_GAP, SLIDER_WIDTH, SLIDER_HEIGHT);
+        y = effects_[i]->getBottom() + ROW_GAP;
     }
 }
 
@@ -84,6 +84,7 @@ FxEffects::FxEffectSlider::FxEffectSlider(int effect, FxController& controller)
     setMouseCursor(juce::MouseCursor::PointingHandCursor);
     setWantsKeyboardFocus(true);
 
+    value_label_.setFont(juce::Font(12.0f));   // smaller than the 17px label font so 0–10 isn't clipped
     value_label_.setJustificationType(juce::Justification::centredLeft);
     value_label_.setInterceptsMouseClicks(false, false);
     addChildComponent(value_label_);
