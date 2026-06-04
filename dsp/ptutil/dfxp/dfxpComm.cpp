@@ -116,16 +116,10 @@ int dfxp_CommunicateInit(PT_HANDLE *hp_dfxp)
 #endif
 
 	if (dfxp_ComLoadAndRun(hp_dfxp) != OKAY)
-	{
-		fprintf(stderr, "[CommInit] FAIL: dfxp_ComLoadAndRun\n");
 		return(NOT_OKAY);
-	}
 
 	if (dfxpCommunicateAll(hp_dfxp) != OKAY)
-	{
-		fprintf(stderr, "[CommInit] FAIL: dfxpCommunicateAll\n");
 		return(NOT_OKAY);
-	}
 
 	return(OKAY);
 }
@@ -199,17 +193,11 @@ int dfxpCommunicateAll(PT_HANDLE *hp_dfxp)
 {
 	/* Communicate all the parameters that can change based on user controls */
 	if (dfxpCommunicateAllNonFixed(hp_dfxp, IS_FALSE) != OKAY)
-	{
-		fprintf(stderr, "[CommAll] FAIL: dfxpCommunicateAllNonFixed\n");
 		return(NOT_OKAY);
-	}
 
 	/* Communicate all the parameters that don't change based on user controls */
 	if (dfxp_CommunicateAllFixed(hp_dfxp) != OKAY)
-	{
-		fprintf(stderr, "[CommAll] FAIL: dfxp_CommunicateAllFixed\n");
 		return(NOT_OKAY);
-	}
 
 	return(OKAY);
 }
@@ -566,14 +554,6 @@ int dfxp_CommunicateFidelity(PT_HANDLE *hp_dfxp)
 		             pc_fidelity,
 		             &dsp_fidelity) != OKAY)
 		return(NOT_OKAY);
-
-#if defined(__APPLE__)
-	{
-		static int s_fid = 0;
-		if (++s_fid <= 12)
-			fprintf(stderr, "[Fidelity #%d] midi=%d dsp_drive=%.4f\n", s_fid, pc_fidelity, dsp_fidelity);
-	}
-#endif
 
 	// Note every channel gets normal fidelity except for subwoofer channel, which will always be bypassed
 	if (comRealWrite(cast_handle->com_hdl_front, AURAL_DRIVE + DSP_PLAY_AURAL_PARAM_OFFSET, 

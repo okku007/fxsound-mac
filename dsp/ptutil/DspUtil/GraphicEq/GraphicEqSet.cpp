@@ -204,13 +204,12 @@ int PT_DECLSPEC GraphicEqSetBandBoostCut(PT_HANDLE *hp_GraphicEq, int i_band_num
 
 	band_freq = rp_freq_array[i_section_num];
 
-
-	// Zero and turn off section if gain is 0 dB or if band freq is >= than 1/2 sampling freq 
+	// Zero and turn off section if gain is 0 dB or if band freq is >= than 1/2 sampling freq
 	if( (r_boost_cut == (realtype)0.0) || ((band_freq * (realtype)2.0) >= cast_handle->sampling_freq) )
 	{
 		if( sosSetSectionUnityGain((PT_HANDLE *)(cast_handle->sos_hdl), i_section_num, 0) != OKAY )
 			return(NOT_OKAY);
-	 
+
 		return(OKAY);
 	}
 

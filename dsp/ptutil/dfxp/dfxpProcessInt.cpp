@@ -57,16 +57,6 @@ int dfxpModifyShortIntSamples(PT_HANDLE *hp_dfxp, short int *sip_input_samples,
 	if (cast_handle == NULL)
 		return(OKAY);
 
-#if defined(__APPLE__)
-	{
-		static int s_int_buf = 0;
-		if (++s_int_buf <= 6)
-			fprintf(stderr, "[DSP:Int buf#%d] fully_init=%d unsupported_fmt=%d num_sets=%d\n",
-			        s_int_buf, (int)cast_handle->fully_initialized,
-			        (int)cast_handle->unsupported_format_flag, i_num_sample_sets);
-	}
-#endif
-
 	if ((cast_handle->trace.mode) && (!cast_handle->trace.i_process_int_samples_done))
 		(cast_handle->slout1)->Message_Wide(FIRST_LINE, L"dfxpModifyShortIntSamples(): Entered");
 

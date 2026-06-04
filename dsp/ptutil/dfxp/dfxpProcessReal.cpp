@@ -73,16 +73,6 @@ int dfxpModifyRealtypeSamples(PT_HANDLE *hp_dfxp, realtype *rp_samples, int i_nu
 	if (cast_handle == NULL)
 		return(OKAY);
 
-#if defined(__APPLE__)
-	{
-		static int s_real_buf = 0;
-		if (++s_real_buf <= 6)
-			fprintf(stderr, "[DSP:Real buf#%d] fully_init=%d unsupported_fmt=%d num_sets=%d\n",
-			        s_real_buf, (int)cast_handle->fully_initialized,
-			        (int)cast_handle->unsupported_format_flag, i_num_sample_sets);
-	}
-#endif
-
 	/*
 	 * Set whether we are going to do lean and mean processing which is necessary for the new
 	 * DFX 11 style which uses the virtual soundcard.
@@ -157,7 +147,7 @@ int dfxpModifyRealtypeSamples(PT_HANDLE *hp_dfxp, realtype *rp_samples, int i_nu
 		if ((i_eq_on) &&
 			(cast_handle->num_channels_out <= 2) || (cast_handle->num_channels_out == 6) || (cast_handle->num_channels_out == 8) )
 		{
-			if (GraphicEqProcess(cast_handle->eq.graphicEq_hdl, 
+			if (GraphicEqProcess(cast_handle->eq.graphicEq_hdl,
 										 rp_samples, rp_samples, i_num_sample_sets, cast_handle->num_channels_out,
 										cast_handle->sampling_freq) != OKAY)
 				return(NOT_OKAY);

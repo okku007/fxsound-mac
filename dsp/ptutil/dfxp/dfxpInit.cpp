@@ -91,7 +91,6 @@ int dfxpInit(PT_HANDLE **hpp_dfxp,
 	/* Calculates if this is the first time DFX has been run since installation. */
    if (dfxp_InitFirstTimeRunFlag((PT_HANDLE *)cast_handle) != OKAY)
 	{
-		fprintf(stderr, "[dfxpInit] FAIL: dfxp_InitFirstTimeRunFlag\n");
 		return(NOT_OKAY);
 	}
 
@@ -102,7 +101,6 @@ int dfxpInit(PT_HANDLE **hpp_dfxp,
 
 	if (dfxSharedUtilInit(&(cast_handle->hp_sharedUtil), cast_handle->trace.mode, cast_handle->slout1) != OKAY)
 	{
-		fprintf(stderr, "[dfxpInit] FAIL: dfxSharedUtilInit\n");
 		return(NOT_OKAY);
 	}
 
@@ -148,28 +146,24 @@ int dfxpInit(PT_HANDLE **hpp_dfxp,
 	/* Initialize the qnt handle */
 	if (dfxp_InitAllQnts((PT_HANDLE *)cast_handle) != OKAY)
 	{
-		fprintf(stderr, "[dfxpInit] FAIL: dfxp_InitAllQnts\n");
 		return(NOT_OKAY);
 	}
 
 	/* Initialize the comm handle */
 	if (dfxp_CommunicateInit((PT_HANDLE *)cast_handle) != OKAY)
 	{
-		fprintf(stderr, "[dfxpInit] FAIL: dfxp_CommunicateInit\n");
 		return(NOT_OKAY);
 	}
 
 	/* Create the SurroundSyn (2 channel to 6/8 channel synthesis) handle */
 	if (SurroundSynNew(&(cast_handle->SurroundSyn_hdl)) != OKAY)
 	{
-		fprintf(stderr, "[dfxpInit] FAIL: SurroundSynNew\n");
 		return(NOT_OKAY);
 	}
 
 	/* Create the BinauralSyn (6/8 channel to 2 channel synthesis) handle */
 	if (BinauralSynNew(&(cast_handle->BinauralSyn_hdl), BINAURAL_SYN_DEFAULT_NUM_COEFFS) != OKAY)
 	{
-		fprintf(stderr, "[dfxpInit] FAIL: BinauralSynNew\n");
 		return(NOT_OKAY);
 	}
 
@@ -178,14 +172,12 @@ int dfxpInit(PT_HANDLE **hpp_dfxp,
 	/* Initialize Graphic EQ */
 	if (dfxp_EqInit((PT_HANDLE *)cast_handle) != OKAY)
 	{
-		fprintf(stderr, "[dfxpInit] FAIL: dfxp_EqInit\n");
 		return(NOT_OKAY);
 	}
 
 	/* Initialize the spectrum info */
 	if (dfxp_SpectrumInit((PT_HANDLE *)cast_handle) != OKAY)
 	{
-		fprintf(stderr, "[dfxpInit] FAIL: dfxp_SpectrumInit\n");
 		return(NOT_OKAY);
 	}
 
@@ -206,18 +198,15 @@ int dfxpInit(PT_HANDLE **hpp_dfxp,
 	/* Init the longest buffer so far to 0 */
 	if (dfxp_StoreLongestBufferSize((PT_HANDLE *)cast_handle, 0) != OKAY)
 	{
-		fprintf(stderr, "[dfxpInit] FAIL: dfxp_StoreLongestBufferSize\n");
 		return(NOT_OKAY);
 	}
 
 	/* Init the temporary bypass all setting to not bypass */
 	if (dfxpSetTemporaryBypassAll((PT_HANDLE *)cast_handle, IS_FALSE) != OKAY)
 	{
-		fprintf(stderr, "[dfxpInit] FAIL: dfxpSetTemporaryBypassAll\n");
 		return(NOT_OKAY);
 	}
 
-	fprintf(stderr, "[dfxpInit] SUCCESS — handle=%p\n", (void*)cast_handle);
    *hpp_dfxp = (PT_HANDLE *)cast_handle;
 
 	if (cast_handle->trace.mode)

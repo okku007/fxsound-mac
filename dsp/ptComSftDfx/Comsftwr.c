@@ -101,16 +101,6 @@ int COMSFTWR_DECL comSftwrWriteParam(PT_HANDLE *hp_comSftwr, long l_offset, long
 	}
 #endif
 
-#if defined(__APPLE__)
-	/* Trace writes to dsp_params[21] (aural_odd) to find what zeroes it */
-	if (l_offset == 21 || l_offset == 20 || l_offset == 22) {
-		static int s_wp_count = 0;
-		if (++s_wp_count <= 20)
-			fprintf(stderr, "[WriteParam] offset=%ld val_long=%ld flt=%.6f\n",
-			        l_offset, l_val, *flt_ptr);
-	}
-#endif
-
 	cast_handle->dsp_params[l_offset] = *flt_ptr;
 
 	/* Set the recue pending flag */
@@ -152,17 +142,6 @@ int COMSFTWR_DECL comSftwrProcessWaveBuffer(PT_HANDLE *hp_comSftwr, long *lp_dat
    param_addr = &(cast_handle->dsp_params[0]);
 
    index = cast_handle->dsp_function_index;
-
-#if defined(__APPLE__)
-   {
-      static int s_com_buf = 0;
-      if (++s_com_buf <= 6)
-         fprintf(stderr, "[DSP:Com buf#%d] index=%d dsp_memory=%p size=%ld bypass_on_param=%.0f\n",
-                 s_com_buf, index,
-                 (void *)cast_handle->dsp_memory, cast_handle->dsp_memory_size,
-                 (cast_handle->dsp_params[36]));
-   }
-#endif
 
 #ifdef COMSFTWR_MESSAGE_BOXES
    if( (index < 0) || (index > 62) )
