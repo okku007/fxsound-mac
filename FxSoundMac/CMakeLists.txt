@@ -13,28 +13,21 @@ set(REPO_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/..)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/DfxDspLib.cmake)
 
 include(FetchContent)
+# Patch JUCE 7.0.12 for the macOS 15+ / Xcode 26 SDK, where CGWindowListCreateImage
+# was removed (not just deprecated). PATCH_COMMAND runs right after checkout, BEFORE
+# JUCE configures and builds juceaide at MakeAvailable time — applying it afterwards
+# is too late: juceaide compiles the unpatched source and the configure fails.
+# The command runs in JUCE's source dir, so the file path is relative. The script is
+# idempotent (already-patched -> no-op) so reconfigures are safe.
 FetchContent_Declare(
     juce
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
     GIT_TAG 7.0.12
+    PATCH_COMMAND python3
+        "${CMAKE_CURRENT_SOURCE_DIR}/patches/patch_juce_windowing.py"
+        "modules/juce_gui_basics/native/juce_Windowing_mac.mm"
 )
 FetchContent_MakeAvailable(juce)
-
-# Patch JUCE 7.0.12 for Xcode 26 / macOS 26 SDK compatibility.
-# CGWindowListCreateImage was removed (not just deprecated) in macOS 15 SDK.
-set(_juce_windowing_patch
-    "${juce_SOURCE_DIR}/modules/juce_gui_basics/native/juce_Windowing_mac.mm")
-if(EXISTS "${_juce_windowing_patch}")
-    execute_process(
-        COMMAND python3
-            "${CMAKE_CURRENT_SOURCE_DIR}/patches/patch_juce_windowing.py"
-            "${_juce_windowing_patch}"
-        RESULT_VARIABLE _patch_result
-    )
-    if(NOT _patch_result EQUAL 0)
-        message(WARNING "JUCE windowing patch returned ${_patch_result} (may already be applied)")
-    endif()
-endif()
 
 # Bundle SVG assets and Gilroy fonts as compile-time binary data.
 juce_add_binary_data(FxSoundMacAssets

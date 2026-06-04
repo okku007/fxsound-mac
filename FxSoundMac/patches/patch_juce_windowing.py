@@ -92,6 +92,10 @@ static Image createNSWindowSnapshot (NSWindow* nsWindow)
    #endif
 }"""
 
+if NEW in text:
+    print(f"Already patched: {target}")
+    sys.exit(0)
+
 if OLD not in text:
     print("ERROR: patch target not found — JUCE source may have changed", file=sys.stderr)
     sys.exit(1)
