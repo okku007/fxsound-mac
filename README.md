@@ -128,16 +128,27 @@ For end-to-end audio checks (BlackHole setup, DSP controls, device switching, re
 
 ## Architecture (macOS)
 
-```
-UI (JUCE components)
-    └─ FxController          owns DSP state; message-thread setters, audio-thread processBlock
-        └─ LegacyDspAdapter  float ↔ DSP bridge; output gain; effect/EQ state cache
-            └─ DfxDspMac      legacy FxSound DSP + macOS stubs replacing the Win32 dependencies
+```mermaid
+flowchart TD
+    SYS([System audio]) --> BH[BlackHole 2ch<br/>virtual input device]
+    BH --> ENG[MacAudioEngine<br/>audio callback]
+    ENG -->|processBlock, per buffer| CTRL[FxController<br/>owns DSP state]
+    CTRL --> ADP[LegacyDspAdapter<br/>float bridge · output gain · effect/EQ cache]
+    ADP --> DSP[DfxDspMac<br/>FxSound DSP + macOS stubs]
+    DSP -->|processed audio| ENG
+    ENG --> OUT([Selected output device<br/>speakers / headphones])
+
+    UI[UI · JUCE components<br/>effects · EQ · presets · volume] -->|message-thread setters| CTRL
+
+    classDef audio fill:#e33250,stroke:#b1b1b1,color:#fff;
+    class SYS,BH,ENG,OUT,DSP audio;
 ```
 
 `MacAudioEngine` opens a single `AudioDeviceManager` route: BlackHole (input) → DSP → selected output
-device. The Windows-only sources under `dsp/` and `audiopassthru/` are treated as read-mostly legacy and
-compiled into the `DfxDspMac` static library with thin macOS shims.
+device. The UI sets DSP state on `FxController` from the message thread, while the audio callback runs
+`processBlock` on the audio thread (no locks or allocation in that path). The Windows-only sources under
+`dsp/` and `audiopassthru/` are treated as read-mostly legacy and compiled into the `DfxDspMac` static
+library with thin macOS shims.
 
 ---
 
