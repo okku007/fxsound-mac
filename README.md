@@ -156,12 +156,18 @@ library with thin macOS shims.
 
 ---
 
-## Support this macOS port
+## Donate
 
-If this macOS port is useful to you, consider
-[supporting its development](https://paypal.me/okku007) 🙏. This supports the macOS
-port specifically — to back the upstream Windows project, use the FxSound donate link
-below.
+If this macOS port is useful to you, a small tip keeps it going. Thank you 🙏
+
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/okku007)
+[![Buy Me a Samosa](https://img.shields.io/badge/Buy_Me_a_Samosa-%F0%9F%A5%9F-E8732C?style=for-the-badge)](https://okku007.github.io/fxsound-macos/donate.html)
+
+- **International** — PayPal (button above).
+- **India (UPI)** — the Buy Me a Samosa button.
+
+This supports the macOS port specifically — to back the upstream Windows project, use the
+FxSound donate link below.
 
 ---
 
