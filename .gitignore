@@ -363,3 +363,20 @@ docs/
 AGENTS.MD
 PORTING_NOTES.md
 fxsound-macos-port-guide-v4.md
+
+# --- macOS port: editor / OS / tooling junk ---
+.DS_Store
+**/.DS_Store
+.idea/
+.vscode/
+
+# Node tooling pulled in by local plugins (not part of the build)
+/package.json
+/package-lock.json
+
+# DSP probe output + manual debug captures
+FxSoundMac/probe/probe_out/
+debugging-screenshots/
+
+# Release packaging output (zip/dmg produced by scripts/package_release.sh)
+FxSoundMac/dist/

@@ -15,6 +15,10 @@ and is documented under [Original Windows app](#original-windows-app-upstream) b
 System audio ──▶ BlackHole 2ch ──▶ FxSound (DSP) ──▶ your speakers / headphones
 ```
 
+> **Just want to run it?** The easiest way is the **clone-and-build** repo
+> [`okku007/fxsound-macos`](https://github.com/okku007/fxsound-macos) — clone it and run
+> `./setup.sh` to build and launch in one command (it builds locally, so no Gatekeeper warning).
+
 ## Features
 
 - Clean passthrough plus five effects: **Clarity, Ambience, Surround Sound, Dynamic Boost, Bass Boost**
@@ -149,6 +153,15 @@ device. The UI sets DSP state on `FxController` from the message thread, while t
 `processBlock` on the audio thread (no locks or allocation in that path). The Windows-only sources under
 `dsp/` and `audiopassthru/` are treated as read-mostly legacy and compiled into the `DfxDspMac` static
 library with thin macOS shims.
+
+---
+
+## Support this macOS port
+
+If this macOS port is useful to you, consider
+[supporting its development](https://paypal.me/okku007) 🙏. This supports the macOS
+port specifically — to back the upstream Windows project, use the FxSound donate link
+below.
 
 ---
 
