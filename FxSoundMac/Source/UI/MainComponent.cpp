@@ -96,7 +96,13 @@ MainComponent::MainComponent()
     // Output selector
     addAndMakeVisible(outputBox);
     outputBox.setTextWhenNothingSelected("Select Output");
-    outputBox.onChange = [this] { layoutTopRow(); };
+    outputBox.onChange = [this] {
+        layoutTopRow();
+        // Live re-route: if audio is already running, switch it to the new device.
+        // Status panel updates via engine.onStatusChanged. Idle = handled at Start.
+        if (engine.isRunning())
+            engine.setOutputDevice(outputBox.getText());
+    };
 
     // Routing control: "Routing Through BlackHole:" label + Start/Stop button.
     // Button text reflects routing state — "Stop" while running, "Start" when idle.

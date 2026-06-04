@@ -18,6 +18,10 @@ public:
     void stop();
     bool isRunning() const { return running; }
 
+    // Re-route a running engine to a different output device without a full restart.
+    // No-op when idle (Start will pick up the current selection instead).
+    AudioEngineStatus setOutputDevice(const juce::String& outputDeviceName);
+
     AudioEngineStatus getStatus() const { return status; }
 
     // Called on the message thread when status changes.

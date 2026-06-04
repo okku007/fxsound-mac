@@ -82,6 +82,44 @@ void MacAudioEngine::stop()
     running = false;
 }
 
+AudioEngineStatus MacAudioEngine::setOutputDevice(const juce::String& outputDeviceName)
+{
+    // Idle: nothing routed yet — Start uses the combo selection directly.
+    if (! running || outputDeviceName.isEmpty())
+        return status;
+
+    auto setup = deviceManager.getAudioDeviceSetup();
+    if (setup.outputDeviceName == outputDeviceName)
+        return status; // already on this device
+
+    setup.outputDeviceName = outputDeviceName;
+    setup.useDefaultOutputChannels = true;
+
+    // Callback stays attached: JUCE reopens the device and fires
+    // audioDeviceAboutToStart on `this`, which re-runs controller.prepare.
+    auto err = deviceManager.setAudioDeviceSetup(setup, true);
+    if (err.isNotEmpty())
+    {
+        setStatus({ AudioEngineState::EngineFailedToStart, err });
+        return status;
+    }
+
+    if (auto* dev = deviceManager.getCurrentAudioDevice())
+    {
+        const int inCh  = dev->getActiveInputChannels().countNumberOfSetBits();
+        const int outCh = dev->getActiveOutputChannels().countNumberOfSetBits();
+        if (! DeviceValidation::isSupportedChannelLayout(juce::jmin(inCh, outCh)))
+        {
+            setStatus({ AudioEngineState::UnsupportedChannelLayout,
+                        "in=" + juce::String(inCh) + " out=" + juce::String(outCh) });
+            return status;
+        }
+    }
+
+    setStatus({ AudioEngineState::Running, {} });
+    return status;
+}
+
 void MacAudioEngine::audioDeviceAboutToStart(juce::AudioIODevice* device)
 {
     controller.prepare((int) device->getCurrentSampleRate(),
